@@ -54,7 +54,7 @@ def find_cor_points():
 
     # 매칭 결과를 거리기준 오름차순으로 정렬 ---③
     matches = sorted(matches, key=lambda x:x.distance)
-
+    
     # 모든 매칭점 그리기 ---④
     res1 = cv2.drawMatches(img1, kp1, img2, kp2, matches, None, \
                         flags=cv2.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS)
@@ -86,7 +86,7 @@ def find_cor_points():
             list_kp2.append(kp2[mat.trainIdx].pt)
 
     # 모든 매칭점과 정상치 비율 ---⑧
-    accuracy=float(mask.sum()) / mask.size
+    accuracy=float(mask.sum()) / mask.size * 100
     print("accuracy: %d/%d(%.2f%%)"% (mask.sum(), mask.size, accuracy))
 
     # 결과 저장
