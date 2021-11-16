@@ -4,7 +4,7 @@ from skimage.segmentation import flood
 from matplotlib.pyplot import imshow
 import matplotlib.pyplot as plt
 
-def ExtractFrame(img, threshold=100):
+def ExtractFrame(img, threshold=100, tolerance=100):
     pim = (img < threshold)*(255-img)
     pim = cv2.cvtColor(pim, cv2.COLOR_BGR2GRAY)
 
@@ -15,14 +15,14 @@ def ExtractFrame(img, threshold=100):
         if (visit[point] == False): continue
 
         pim *= visit
-        mask = flood(pim, point, tolerance=100)
+        mask = flood(pim, point, tolerance=tolerance)
         visit *= (mask != True)
 
         if (result.sum() < mask.sum()):
             result = mask
     return result
   
-def OuterFrame(img, threshold=100):
+def OuterFrame(img, threshold=100, tolerance=100):
     pim = (img < threshold)*(255-img)
     pim = cv2.cvtColor(pim, cv2.COLOR_BGR2GRAY)
 
@@ -33,30 +33,31 @@ def OuterFrame(img, threshold=100):
                     [pim.shape[0]-1, pim.shape[1]-1]])
     for point in nnz:
         point = tuple(point)
-        mask = flood(pim, point, tolerance=100)
+        mask = flood(pim, point, tolerance=tolerance)
         result += mask
         
     return flood(result, (pim.shape[0]//2, pim.shape[1]//2))
         
-def InnerFrame(img, threshold=100):
+def InnerFrame(img, threshold=100, tolerance=100):
     pim = (img < threshold)*(255-img)
     pim = cv2.cvtColor(pim, cv2.COLOR_BGR2GRAY)
 
     result = np.zeros(pim.shape, dtype='uint8')
     point = (pim.shape[0]//2, pim.shape[1]//2)        
-    return flood(pim, point)
+    return flood(pim, point, tolerance=tolerance)
 
-def Frame(image):
+def Frame(image, tolerance=100):
     result = np.array(image)
-    mask = OuterFrame(image, 50)
+    mask = OuterFrame(image, tolerance)
     result[mask == 0] = 255
-    mask = InnerFrame(result, 50)
+    mask = InnerFrame(result, tolerance)
     result[mask] = 255
-    return ExtractFrame(result)*255
+    return ExtractFrame(result, tolerance)*255
 
 def Boundaries(pim):
     center = [pim.shape[0]//2, pim.shape[1]//2]
     mask = flood(pim, tuple(center))
+    center = center[::-1]
 
     contours, hierarchy = cv2.findContours(mask*255, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -116,12 +117,14 @@ def Boundaries(pim):
         vertices[3] = v[1]
     return vertices
 
-def CropImage(im, imReference):
-    fim = Frame(im)
+def CropImage(im, imReference, tolerance=70):
+    fim = Frame(im, tolerance=tolerance)
     vim = Boundaries(fim)
+    print(vim)
 
     fimReference = Frame(imReference)
     vimReference = Boundaries(fimReference)
+    print(vimReference)
     R = np.array([np.min(vimReference, 0), np.max(vimReference, 0)])
     
     fig, ax = plt.subplots(ncols=2, figsize=(10, 5))
@@ -131,7 +134,7 @@ def CropImage(im, imReference):
     ax[1].imshow(imReference)
     ax[1].scatter(vimReference[:,0], vimReference[:,1], marker='x', c='red', s=200, linewidth=3)
     plt.tight_layout()
-    plt.savefig('results/images_to_crop.png', dpi=300)    
+    plt.savefig('images_to_crop.png', dpi=300)    
 
     H, _ = cv2.findHomography(vim, vimReference)
     height, width, channels = imReference.shape
