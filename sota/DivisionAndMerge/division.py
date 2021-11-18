@@ -18,9 +18,10 @@ def main():
         size_y = img.shape[0]
         partial_size = 40
         idx = 1
+        
         for i in range(partial_size):
             for j in range(partial_size):
-                partial_img = img[round(i/partial_size*size_y):round((i+1)/partial_size*size_y), round(j/partial_size*size_x):round((j+1)/partial_size*size_x), :]
+                partial_img = img[floor(i/partial_size*size_y):floor((i+1)/partial_size*size_y), floor(j/partial_size*size_x):floor((j+1)/partial_size*size_x), :]
                 partial_img = cv2.GaussianBlur(partial_img, (0, 0), 1.5)
                 cv2.imwrite(resultdir + "/" + img_path[img_path.find(".jpg") - 3:img_path.find(".jpg")] + "_part" + str(idx) + ".jpg", partial_img)
                 idx = idx + 1 
