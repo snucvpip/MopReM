@@ -59,4 +59,3 @@ if __name__ == '__main__':
     ax[2].set_title('Cleaned Image')
     plt.savefig(os.path.join(resultdir,'result.png'), dpi=300)
     # plt.show()
-    
