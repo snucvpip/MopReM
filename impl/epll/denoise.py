@@ -8,14 +8,14 @@ import os
 from epll import *
 
 
-def process(I, GS):
+def process(I, noiseI, GS):
     patchSize = 8
     noiseSD = 25/255
     
     # same to matlab seed
-    np.random.seed(1)
-    rand = np.array(norm.ppf(np.random.rand(I.shape[1], I.shape[0]))).T
-    noiseI = I + noiseSD * rand
+    # np.random.seed(1)
+    # rand = np.array(norm.ppf(np.random.rand(I.shape[1], I.shape[0]))).T
+    # noiseI = I + noiseSD * rand
     excludeList = []
     LogLFunc = []
 
@@ -32,20 +32,25 @@ def process(I, GS):
                                     SigmaNoise  = None 
                                 )
 
-    return I, noiseI, cleanI
+    return cleanI
 
 
 def denoise( datadir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data'),
-             filename = '160068.jpg', 
+             target = 'cat.jpg',
+             source = '', 
              convert_type = 'L' ):
     GS = get_gs_matrix(datadir) 
 
     if convert_type == 'L':
-        I = np.array(Image.open(os.path.join(datadir, filename)).convert(convert_type))/255
-        _, noiseI, cleanI = process(I, GS)
+        sourceI = np.array(Image.open(os.path.join(datadir, source)).convert(convert_type))/255
+        targetI = np.array(Image.open(os.path.join(datadir, target)).convert(convert_type))/255
+        
+        print('grayscale image denoising...')
+        cleanI = process(targetI, sourceI, GS)
 
     elif convert_type == 'RGB':
-        I = np.array(Image.open(os.path.join(datadir, filename)).convert(convert_type))/255
+        sourceI = np.array(Image.open(os.path.join(datadir, source)).convert(convert_type))/255
+        targetI = np.array(Image.open(os.path.join(datadir, target)).convert(convert_type))/255
         cleanI = np.empty(I.shape)
 
         for i in range(3):
@@ -56,7 +61,7 @@ def denoise( datadir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
             else :
                 print('B channel denoising...')
 
-            _, noiseI, cleanI[:,:,i] = process(I[:,:,i], GS)
+            cleanI[:,:,i] = process(targetI[:,:,i], sourceI[:,:,i], GS)
             print()
 
     else:
@@ -93,7 +98,7 @@ def get_result(I, noiseI, cleanI, filename='result.png', show=False):
 
 if __name__ == '__main__':
     start = time.time()
-    I, noiseI, cleanI = denoise(convert_type='RGB')
+    I, noiseI, cleanI = denoise(source='source_cropped.png', target='target_cropped.png', convert_type='L')
     end = time.time()
     print('time elapsed : {:.2f}'.format(end-start))
 
