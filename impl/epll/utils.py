@@ -1,4 +1,31 @@
+'''
+Implementation of matlab built-in functions & EPLL functions
+'''
 import numpy as np
+from scipy.io import loadmat
+import os
+
+
+def get_gs_matrix(path, filename='GSModel_8x8_200_2M_noDC_zeromean.mat'):
+    '''
+    .mat file loader\n
+    only 'GSModel_8x8_200_2M_noDC_zeromean.mat' file load available.
+    '''
+    path = os.path.join(path, filename)
+    mat = loadmat(path)
+
+    GS = mat['GS']
+    ret = {}
+
+    ret['dim']           = GS['dim'][0,0][0][0]
+    ret['nmodels']       = GS['nmodels'][0,0][0][0]
+    ret['means']         = GS['means'][0,0]
+    ret['covs']          = GS['covs'][0,0]
+    ret['invcovs']       = GS['invcovs'][0,0]
+    ret['mixweights']    = GS['mixweights'][0,0]
+
+    return ret
+
 
 def im2col (mtx, block_size):
     mtx_shape = mtx.shape

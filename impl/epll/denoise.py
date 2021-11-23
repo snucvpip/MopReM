@@ -5,7 +5,8 @@ from scipy.stats import norm
 import time
 import os
 
-from epll import *
+from epll import EPLLhalfQuadraticSplit
+from utils import get_gs_matrix
 
 
 def process(I, noiseI, GS):
@@ -39,6 +40,7 @@ def denoise( datadir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
              target = 'cat.jpg',
              source = '', 
              convert_type = 'L' ):
+    convert_type = convert_type.upper()
     GS = get_gs_matrix(datadir) 
 
     if convert_type == 'L':
@@ -51,9 +53,10 @@ def denoise( datadir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
     elif convert_type == 'RGB':
         sourceI = np.array(Image.open(os.path.join(datadir, source)).convert(convert_type))/255
         targetI = np.array(Image.open(os.path.join(datadir, target)).convert(convert_type))/255
-        cleanI = np.empty(I.shape)
+        cleanI = np.empty(targetI.shape)
 
         for i in range(3):
+            print()
             if i == 0:
                 print('R channel denoising...')
             elif i == 1:
@@ -62,32 +65,31 @@ def denoise( datadir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                 print('B channel denoising...')
 
             cleanI[:,:,i] = process(targetI[:,:,i], sourceI[:,:,i], GS)
-            print()
-
+            
     else:
         print('ValueError: covert type should be grayscale(L) or RGB')
         exit(-1)
 
-    return I, noiseI, cleanI
+    return targetI, sourceI, cleanI
 
 
-def get_result(I, noiseI, cleanI, filename='result.png', show=False):
+def get_result(targetI, sourceI, cleanI, filename='result.png', show=False):
     resultdir = os.path.join( os.path.dirname(os.path.realpath(__file__)), 'result' )
     if not os.path.exists(resultdir):
         os.makedirs(resultdir)
 
-    if I.ndim == 2:
+    if targetI.ndim == 2:
         cmap='gray'
-    elif I.ndim == 3:
+    elif targetI.ndim == 3:
         cmap=None
     else:
         print('image dimesion should be 2 or 3')
         exit(-1)
 
     _, ax = plt.subplots(ncols=3, figsize=(15, 5))
-    ax[0].imshow(I, cmap=cmap)
+    ax[0].imshow(targetI, cmap=cmap)
     ax[0].set_title('Original')
-    ax[1].imshow(noiseI, cmap=cmap)
+    ax[1].imshow(sourceI, cmap=cmap)
     ax[1].set_title('Corrupted Image')
     ax[2].imshow(cleanI, cmap=cmap)
     ax[2].set_title('Cleaned Image')
@@ -98,8 +100,8 @@ def get_result(I, noiseI, cleanI, filename='result.png', show=False):
 
 if __name__ == '__main__':
     start = time.time()
-    I, noiseI, cleanI = denoise(source='source_cropped.png', target='target_cropped.png', convert_type='L')
+    targetI, sourceI, cleanI = denoise(source='source_cropped.png', target='target_cropped.png', convert_type='L')
     end = time.time()
     print('time elapsed : {:.2f}'.format(end-start))
 
-    get_result(I, noiseI, cleanI)
+    get_result(targetI, sourceI, cleanI)
