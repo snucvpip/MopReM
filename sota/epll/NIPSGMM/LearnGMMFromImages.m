@@ -18,7 +18,3 @@ NewGMM = OnlineGMMEM(nmodels,@(N) removeDC(RandPatchesFromImagesCell(N,PatchSize
 % sort output 
 [NewGMM.mixweights,inds] = sort(NewGMM.mixweights,'descend');
 NewGMM.covs = NewGMM.covs(:,:,inds);
-
-
-
-

@@ -7,12 +7,9 @@ import os
 
 from epll import *
 
-def denoise(datadir=os.path.join( os.path.dirname(os.path.realpath(__file__)), 'data' ),
-            filename='160068.jpg'):
+
+def process(I, GS):
     patchSize = 8
-
-    I = np.array(Image.open(os.path.join(datadir, filename)).convert('L'))/255
-
     noiseSD = 25/255
     
     # same to matlab seed
@@ -21,8 +18,6 @@ def denoise(datadir=os.path.join( os.path.dirname(os.path.realpath(__file__)), '
     noiseI = I + noiseSD * rand
     excludeList = []
     LogLFunc = []
-
-    GS = get_gs_matrix(datadir)
 
     cleanI, psnr, cost = EPLLhalfQuadraticSplit(
                                     noiseI      = noiseI, 
@@ -40,22 +35,66 @@ def denoise(datadir=os.path.join( os.path.dirname(os.path.realpath(__file__)), '
     return I, noiseI, cleanI
 
 
-if __name__ == '__main__':
-    start = time.time()
-    I, noiseI, cleanI = denoise()
-    end = time.time()
-    print('time elapsed : {:.1f}'.format(end-start))
+def denoise( datadir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data'),
+             filename = '160068.jpg', 
+             convert_type = 'L' ):
+    GS = get_gs_matrix(datadir) 
 
+    if convert_type == 'L':
+        I = np.array(Image.open(os.path.join(datadir, filename)).convert(convert_type))/255
+        _, noiseI, cleanI = process(I, GS)
+
+    elif convert_type == 'RGB':
+        I = np.array(Image.open(os.path.join(datadir, filename)).convert(convert_type))/255
+        cleanI = np.empty(I.shape)
+
+        for i in range(3):
+            if i == 0:
+                print('R channel denoising...')
+            elif i == 1:
+                print('G channel denoising...')
+            else :
+                print('B channel denoising...')
+
+            _, noiseI, cleanI[:,:,i] = process(I[:,:,i], GS)
+            print()
+
+    else:
+        print('ValueError: covert type should be grayscale(L) or RGB')
+        exit(-1)
+
+    return I, noiseI, cleanI
+
+
+def get_result(I, noiseI, cleanI, filename='result.png', show=False):
     resultdir = os.path.join( os.path.dirname(os.path.realpath(__file__)), 'result' )
     if not os.path.exists(resultdir):
         os.makedirs(resultdir)
 
-    fig, ax = plt.subplots(ncols=3, figsize=(15, 5))
-    ax[0].imshow(I, cmap='gray')
+    if I.ndim == 2:
+        cmap='gray'
+    elif I.ndim == 3:
+        cmap=None
+    else:
+        print('image dimesion should be 2 or 3')
+        exit(-1)
+
+    _, ax = plt.subplots(ncols=3, figsize=(15, 5))
+    ax[0].imshow(I, cmap=cmap)
     ax[0].set_title('Original')
-    ax[1].imshow(noiseI, cmap='gray')
+    ax[1].imshow(noiseI, cmap=cmap)
     ax[1].set_title('Corrupted Image')
-    ax[2].imshow(cleanI, cmap='gray')
+    ax[2].imshow(cleanI, cmap=cmap)
     ax[2].set_title('Cleaned Image')
-    plt.savefig(os.path.join(resultdir,'result.png'), dpi=300)
-    # plt.show()
+    plt.savefig(os.path.join(resultdir,filename), dpi=300)
+    if show:
+        plt.show()
+
+
+if __name__ == '__main__':
+    start = time.time()
+    I, noiseI, cleanI = denoise(convert_type='RGB')
+    end = time.time()
+    print('time elapsed : {:.2f}'.format(end-start))
+
+    get_result(I, noiseI, cleanI)
