@@ -9,7 +9,7 @@ from epll.epll import EPLLhalfQuadraticSplit
 from epll.utils import get_gs_matrix
 
 
-def process(I, noiseI, GS):
+def process(noiseI, GS):
     patchSize = 8
     noiseSD = 25/255
     
@@ -26,7 +26,7 @@ def process(I, noiseI, GS):
                                     patchSize   = patchSize, 
                                     betas       = (1/(noiseSD**2))*np.array([1,4,8,16,32]), 
                                     T           = 1, 
-                                    I           = I, 
+                                    I           = None, 
                                     LogLFunc    = LogLFunc, 
                                     GS          = GS,
                                     excludeList = None,
@@ -37,21 +37,20 @@ def process(I, noiseI, GS):
 
 
 def denoise( target,
-             source,
              datadir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data'),
              convert_type = 'RGB' ):
     convert_type = convert_type.upper()
     GS = get_gs_matrix(datadir) 
 
     if convert_type == 'L':
-        sourceI = np.array(Image.open(source).convert(convert_type))/255
+        # sourceI = np.array(Image.open(source).convert(convert_type))/255
         targetI = np.array(Image.open(target).convert(convert_type))/255
         
         print('grayscale image denoising...')
-        cleanI = process(targetI, sourceI, GS)
+        cleanI = process(targetI, GS)
 
     elif convert_type == 'RGB':
-        sourceI = np.array(Image.open(source).convert(convert_type))/255
+        # sourceI = np.array(Image.open(source).convert(convert_type))/255
         targetI = np.array(Image.open(target).convert(convert_type))/255
         cleanI = np.empty(targetI.shape)
 
@@ -64,34 +63,32 @@ def denoise( target,
             else :
                 print('B channel denoising...')
 
-            cleanI[:,:,i] = process(targetI[:,:,i], sourceI[:,:,i], GS)
+            cleanI[:,:,i] = process(targetI[:,:,i], GS)
             
     else:
         print('ValueError: covert type should be grayscale(L) or RGB')
         exit(-1)
 
-    return targetI, sourceI, cleanI
+    return cleanI
 
 
-def get_result(targetI, sourceI, cleanI, resultdir):
-    assert os.path.exists(resultdir), print('result directory not exists')
+def get_result(cleanI, resultpath):
+    assert os.path.exists(os.path.dirname(resultpath)), print('result directory not exists')
 
-    if targetI.ndim == 2:
+    if cleanI.ndim == 2:
         cmap='gray'
-    elif targetI.ndim == 3:
+    elif cleanI.ndim == 3:
         cmap=None
     else:
         print('image dimesion should be 2 or 3')
         exit(-1)
 
-    # plt.imsave(os.path.join(resultdir,'source.png'), sourceI)
-    # plt.imsave(os.path.join(resultdir,'target.png'), targetI)
-    plt.imsave(os.path.join(resultdir,'clean.png'), cleanI)
+    plt.imsave(resultpath, cleanI)
 
 
-def main(source, target, resultdir):
-    sourceI = np.array(Image.open(source).convert('RGB'))/255
-    targetI = np.array(Image.open(target).convert('RGB'))/255
+def main(target, resultdir):
     cleanI = np.array(Image.open(target).convert('RGB'))/255
-    # targetI, sourceI, cleanI = denoise(source=source, target=target, convert_type='RGB')
-    get_result(targetI, sourceI, cleanI, resultdir)
+    # cleanI = denoise(target=target, convert_type='RGB')
+    filename = os.path.basename(target)
+    resultpath = os.path.join(resultdir, filename)
+    get_result(cleanI, resultpath)
