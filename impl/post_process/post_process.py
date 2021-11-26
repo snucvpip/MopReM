@@ -147,9 +147,9 @@ def CropImage(im, imReference, tolerance=70):
     return src, tar
   
 def main(source, target, clean, resultdir):
-    im = cv2.imread(source, cv2.IMREAD_COLOR)
-    imReference = cv2.imread(target, cv2.IMREAD_COLOR)
-    imClean = cv2.imread(clean, cv2.IMREAD_COLOR)
+    im = cv2.imread(source)
+    imReference = cv2.imread(target)
+    imClean = cv2.imread(clean)
 
     src, tar = CropImage(im, imReference)
     cle, tar = CropImage(imClean, imReference)
@@ -172,6 +172,10 @@ def main(source, target, clean, resultdir):
     cv2.imwrite(os.path.join(resultdir, "clean_cropped.png"), cle)
     cv2.imwrite(os.path.join(resultdir, "target_cropped.png"), tar)
 
+    src = cv2.cvtColor(src, cv2.COLOR_BGR2RGB)
+    cle = cv2.cvtColor(cle, cv2.COLOR_BGR2RGB)
+    tar = cv2.cvtColor(tar, cv2.COLOR_BGR2RGB)
+    
     fig, ax = plt.subplots(ncols=4, nrows=2, figsize=(15, 10))
     ax[0,0].imshow(src), ax[0,0].set_title('Source')
     ax[0,1].imshow(tar), ax[0,1].set_title('Target')

@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
     start = time.time()
     for dirname in childlist:
-        if dirname == 'etc':
+        if dirname == 'etc' or dirname == '.ipynb_checkpoints':
             continue
         print('\ncurrent directory : {}\n'.format(dirname))
         loop_start = time.time()
