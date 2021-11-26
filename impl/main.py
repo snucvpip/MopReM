@@ -6,7 +6,8 @@ import numpy as np
 from PIL import Image
 
 import epll.denoise
-import post_process.post_process as post_process
+import pre_process.pre_process
+import post_process.post_process
 
 pardir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 
@@ -14,7 +15,6 @@ pardir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)
 class MopReM:
     def __init__(self, n):
         self.n = n
-
 
     def pre_process(self):
         datadir = os.path.join(pardir, 'data', self.n)
@@ -26,6 +26,7 @@ class MopReM:
         source = os.path.join(datadir, 'source.png')
         target = os.path.join(datadir, 'target.png')
         
+        # pre-process
         start = time.time()
         pre_process.pre_process.main(source, target, resultdir)
         end = time.time()
@@ -49,39 +50,22 @@ class MopReM:
 
 
     def post_process(self):
-        datadir = os.path.join(pardir, 'result/demoire', self.n)
+        datadir = os.path.join(pardir, 'data', self.n)
         assert os.path.exists(datadir), print('Post process: datadir not exists')
         resultdir = os.path.join(pardir, 'result/post_process', self.n)
         if not os.path.exists(resultdir):
             os.makedirs(resultdir)
 
-        source = os.path.join(datadir, 'source')
-        target = os.path.join(datadir, 'target')
+        source = os.path.join(datadir, 'source.png')
+        target = os.path.join(datadir, 'target.png')
+        
+        datadir = os.path.join(pardir, 'result/demoire', self.n)
+        assert os.path.exists(datadir), print('Post process: datadir not exists')
+        clean = os.path.join(datadir, 'clean.png')
 
+        # post-process
         start = time.time()
-
-        # post_process
-        im = cv2.imread(source, cv2.IMREAD_COLOR)
-        imReference = cv2.imread(target, cv2.IMREAD_COLOR)
-
-        src, tar = post_process.CropImage(im, imReference)
-        mse = post_process.mean_squared_error(src, tar)
-        psnr = post_process.peak_signal_noise_ratio(src, tar)
-        ssim, diff = post_process.structural_similarity(src, tar, multichannel=True, full=True)
-
-        diff = (diff * 255).astype("uint8")
-        diff = cv2.cvtColor(diff, cv2.COLOR_RGB2GRAY)
-
-        fig, ax = post_process.plt.subplot(ncols=4, figsize=(15, 5))
-        ax[0].imshow(src), ax[0].set_title('Source')
-        ax[1].imshow(tar), ax[1].set_title('Target')
-        ax[2].imshow(np.abs(src - tar)), ax[2].set_title(f'MSE:{round(mse, 2)}, PSNR:{round(psnr, 2)}, SSIM:{round(ssim, 2)}')
-        ax[3].imshow(diff, cmap='gray', vmin=0, vmax=255), ax[3].set_title('Difference')
-        post_process.plt.show()
-
-        cv2.imwrite(os.path.join(resultdir, "source_cropped.png"), src)
-        cv2.imwrite(os.path.join(resultdir, "target_cropped.png"), tar)
-
+        post_process.post_process.main(source, target, clean, resultdir)
         end = time.time()
         print('Post processing time: {:.1f}s'.format(end-start))
 
@@ -99,8 +83,8 @@ if __name__ == '__main__':
         print('\ncurrent directory : {}'.format(dirname))
         loop_start = time.time()
         model = MopReM(dirname)
-        model.pre_process()
-        model.demoire()
+#         model.pre_process()
+#         model.demoire()
         model.post_process()
         loop_end = time.time()
         print('demoireing time: {}s\n'.format(loop_end-loop_start))
