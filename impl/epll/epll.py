@@ -1,10 +1,8 @@
 import numpy as np
 import os
-from utils import im2col, scol2im
+from epll.utils import get_gs_matrix, im2col, scol2im
 import math
 import time
-
-from utils import get_gs_matrix
 
 def loggausspdf2(X, sigma):
     '''

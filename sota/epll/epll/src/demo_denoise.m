@@ -2,7 +2,7 @@ clear
 patchSize = 8;
 
 % load image
-I = double(rgb2gray(imread('160068.jpg')))/255;	
+I = double(rgb2gray(imread('1.jpeg')))/255;	
 
 % add noise
 noiseSD = 25/255;
@@ -21,10 +21,12 @@ tic
 toc
 
 % output result
-figure(1);
-imshow(I); title('Original');
-figure(2);
-imshow(noiseI); title('Corrupted Image');
-figure(3);
-imshow(cleanI); title('Restored Image');
-fprintf('PSNR is:%f\n',20*log10(1/std2(cleanI-I)));
+% figure(1);
+% imshow(I); title('Original');
+% figure(2);
+% imshow(noiseI); title('Corrupted Image');
+% figure(3);
+% imshow(cleanI); title('Restored Image');
+% fprintf('PSNR is:%f\n',20*log10(1/std2(cleanI-I)));
+
+imwrite(cleanI,'result.jpeg')
