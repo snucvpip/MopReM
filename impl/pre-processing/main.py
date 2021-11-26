@@ -8,6 +8,37 @@ dirName = "data/sample"
 imFilename = os.path.join(dirName, "source.jpg")
 image = cv2.imread(imFilename)
 
+from skimage.feature import peak_local_max
+
+'''
+def GetLimitNxNy(img):
+    pim = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    height, width = pim.shape
+    n_pixel = 10
+        
+    coordinates = np.array(peak_local_max(pim, min_distance=3))
+    M = np.ceil(np.sqrt(coordinates.shape[0]))
+    N = coordinates.shape[0]
+    
+    d = np.ceil(np.sqrt(width*height/N))
+    
+    return tuple(np.array([width, height]) // int(d * n_pixel))
+
+dirName = "data/snipping"
+imFilename = os.path.join(dirName, "source.png")
+
+print("Reading image to align : ", imFilename);  
+im = cv2.imread(imFilename, cv2.IMREAD_COLOR)
+nx, ny = GetLimitNxNy(im)
+
+pim = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+height, width = pim.shape
+
+plt.figure(figsize=(15,15))
+plt.imshow(pim[1000:1000+(height//ny), 1000:1000+(width//nx)], 'gray')
+'''
+
+
 
 def Snapshot(level=10, nx=10, ny=10):
     #################### EXPLANATION #####################
