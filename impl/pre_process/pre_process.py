@@ -70,7 +70,6 @@ def Snapshot(img, resultdir, level=5):
 
             for x in range(list_nx[i]):
                 cv2.imwrite(dir_path + '/' + str(i) + '-' + str(num_image) + '.png', img[y_start:y_end, x_start:x_end])
-
                 if list_nx[i] >= 2 and x == list_nx[i] - 2:
                     x_start = img.shape[1] - 1 - width
                     x_end = img.shape[1] - 1

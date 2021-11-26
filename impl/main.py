@@ -5,6 +5,7 @@ from PIL import Image
 
 import epll.denoise
 import pre_process.pre_process
+import remove_background.remove_background
 
 pardir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 
@@ -36,12 +37,22 @@ class MopReM:
         resultdir = os.path.join(pardir, 'result/demoire', self.n)
         if not os.path.exists(resultdir):
             os.makedirs(resultdir)
-        
-        source = os.path.join(datadir, '0-1.png')
-
-        # demoire
         start = time.time()
-        epll.denoise.main(source, source, resultdir)
+        for i in range(5):
+            n = 0
+            if i == 1:
+                n = 16
+            elif i ==2:
+                n = 36
+            elif i ==3:
+                n = 81
+            elif i ==3:
+                n = 121
+            for j in range(n):
+                name = str(i)+'-'+str(j+1)+'.png'
+                source = os.path.join(datadir, name)
+                remove_background.remove_background.main(source, resultdir)
+                
         end = time.time()
         print('Demoiring time: {:.1f}s'.format(end-start))
 
