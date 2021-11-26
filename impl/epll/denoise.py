@@ -5,8 +5,8 @@ from scipy.stats import norm
 import time
 import os
 
-from epll import EPLLhalfQuadraticSplit
-from utils import get_gs_matrix
+from epll.epll import EPLLhalfQuadraticSplit
+from epll.utils import get_gs_matrix
 
 
 def process(I, noiseI, GS):
@@ -36,23 +36,23 @@ def process(I, noiseI, GS):
     return cleanI
 
 
-def denoise( datadir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data'),
-             target = 'cat.jpg',
-             source = '', 
-             convert_type = 'L' ):
+def denoise( target,
+             source,
+             datadir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data'),
+             convert_type = 'RGB' ):
     convert_type = convert_type.upper()
     GS = get_gs_matrix(datadir) 
 
     if convert_type == 'L':
-        sourceI = np.array(Image.open(os.path.join(datadir, source)).convert(convert_type))/255
-        targetI = np.array(Image.open(os.path.join(datadir, target)).convert(convert_type))/255
+        sourceI = np.array(Image.open(source).convert(convert_type))/255
+        targetI = np.array(Image.open(target).convert(convert_type))/255
         
         print('grayscale image denoising...')
         cleanI = process(targetI, sourceI, GS)
 
     elif convert_type == 'RGB':
-        sourceI = np.array(Image.open(os.path.join(datadir, source)).convert(convert_type))/255
-        targetI = np.array(Image.open(os.path.join(datadir, target)).convert(convert_type))/255
+        sourceI = np.array(Image.open(source).convert(convert_type))/255
+        targetI = np.array(Image.open(target).convert(convert_type))/255
         cleanI = np.empty(targetI.shape)
 
         for i in range(3):
@@ -73,10 +73,8 @@ def denoise( datadir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
     return targetI, sourceI, cleanI
 
 
-def get_result(targetI, sourceI, cleanI, filename='result.png', show=False):
-    resultdir = os.path.join( os.path.dirname(os.path.realpath(__file__)), 'result' )
-    if not os.path.exists(resultdir):
-        os.makedirs(resultdir)
+def get_result(targetI, sourceI, cleanI, resultdir):
+    assert os.path.exists(resultdir), print('result directory not exists')
 
     if targetI.ndim == 2:
         cmap='gray'
@@ -86,22 +84,14 @@ def get_result(targetI, sourceI, cleanI, filename='result.png', show=False):
         print('image dimesion should be 2 or 3')
         exit(-1)
 
-    _, ax = plt.subplots(ncols=3, figsize=(15, 5))
-    ax[0].imshow(targetI, cmap=cmap)
-    ax[0].set_title('Original')
-    ax[1].imshow(sourceI, cmap=cmap)
-    ax[1].set_title('Corrupted Image')
-    ax[2].imshow(cleanI, cmap=cmap)
-    ax[2].set_title('Cleaned Image')
-    plt.savefig(os.path.join(resultdir,filename), dpi=300)
-    if show:
-        plt.show()
+    # plt.imsave(os.path.join(resultdir,'source.png'), sourceI)
+    # plt.imsave(os.path.join(resultdir,'target.png'), targetI)
+    plt.imsave(os.path.join(resultdir,'clean.png'), cleanI)
 
 
-if __name__ == '__main__':
-    start = time.time()
-    targetI, sourceI, cleanI = denoise(source='source_cropped.png', target='target_cropped.png', convert_type='L')
-    end = time.time()
-    print('time elapsed : {:.2f}'.format(end-start))
-
-    get_result(targetI, sourceI, cleanI)
+def main(source, target, resultdir):
+    sourceI = np.array(Image.open(source).convert('RGB'))/255
+    targetI = np.array(Image.open(target).convert('RGB'))/255
+    cleanI = np.array(Image.open(target).convert('RGB'))/255
+    # targetI, sourceI, cleanI = denoise(source=source, target=target, convert_type='RGB')
+    get_result(targetI, sourceI, cleanI, resultdir)
