@@ -62,7 +62,7 @@ class MopReM:
         
         datadir = os.path.join(pardir, 'result/demoire', self.n)
         assert os.path.exists(datadir), print('Post process: datadir not exists')
-        clean = os.path.join(datadir, 'clean.png')
+        clean = os.path.join(datadir, '0-1.png')
 
         # post-process
         start = time.time()
@@ -84,8 +84,8 @@ if __name__ == '__main__':
         print('\ncurrent directory : {}\n'.format(dirname))
         loop_start = time.time()
         model = MopReM(dirname)
-#         model.pre_process()
-#         model.demoire()
+        model.pre_process()
+        model.demoire()
         model.post_process()
         loop_end = time.time()
         print('Data processing time: {}s\n'.format(loop_end-loop_start))
