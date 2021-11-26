@@ -84,10 +84,9 @@ def get_result(targetI, sourceI, cleanI, resultdir):
         print('image dimesion should be 2 or 3')
         exit(-1)
 
-    plt.imsave(os.path.join(resultdir,'source.png'), sourceI)
-    plt.imsave(os.path.join(resultdir,'target.png'), targetI)
+    # plt.imsave(os.path.join(resultdir,'source.png'), sourceI)
+    # plt.imsave(os.path.join(resultdir,'target.png'), targetI)
     plt.imsave(os.path.join(resultdir,'clean.png'), cleanI)
-
 
 
 def main(source, target, resultdir):

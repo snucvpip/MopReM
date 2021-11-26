@@ -5,7 +5,6 @@ import cv2
 import numpy as np
 from PIL import Image
 
-# import pre_processing
 import epll.denoise
 import post_process.post_process as post_process
 
@@ -20,12 +19,15 @@ class MopReM:
     def pre_process(self):
         datadir = os.path.join(pardir, 'data', self.n)
         assert os.path.exists(datadir), print('Pre process: datadir not exists')
-        resultdir = os.path.join(pardir, 'result', self.n)
+        resultdir = os.path.join(pardir, 'result/pre_process', self.n)
         if not os.path.exists(resultdir):
             os.makedirs(resultdir)
+
+        source = os.path.join(datadir, 'source.png')
+        target = os.path.join(datadir, 'target.png')
         
         start = time.time()
-        # pre_process
+        pre_process.pre_process.main(source, target, resultdir)
         end = time.time()
         print('Post processing time: {:.1f}s'.format(end-start))
 
@@ -37,12 +39,11 @@ class MopReM:
         if not os.path.exists(resultdir):
             os.makedirs(resultdir)
         
-        source = os.path.join(datadir, 'source.png')
-        target = os.path.join(datadir, 'target.png')
+        source = os.path.join(datadir, '0-1.png')
 
         # demoire
         start = time.time()
-        epll.denoise.main(source, target, resultdir)
+        epll.denoise.main(source, source, resultdir)
         end = time.time()
         print('Demoiring time: {:.1f}s'.format(end-start))
 
@@ -92,14 +93,16 @@ if __name__ == '__main__':
     print('total data number: ', len(childlist))
 
     start = time.time()
-    for n in childlist:
-        print('{} data demoireing...'.format(n))
+    for dirname in childlist:
+        if dirname == 'etc':
+            continue
+        print('\ncurrent directory : {}'.format(dirname))
         loop_start = time.time()
-        model = MopReM(n)
+        model = MopReM(dirname)
         model.pre_process()
         model.demoire()
         model.post_process()
         loop_end = time.time()
-        print('{} data demoireing time: {}s'.format(n, loop_end-loop_start))
+        print('demoireing time: {}s\n'.format(loop_end-loop_start))
     end = time.time()
     print('Total time: {}s'.format(end-start))
