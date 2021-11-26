@@ -50,9 +50,8 @@ def Snapshot(img, level=10):
 
     snapshot_info = []
     nx, ny = GetLimitNxNy(img)
-    print(nx, ny)
-    list_nx = np.linspace(1, nx, level)
-    list_ny = np.linspace(1, ny, level)
+    list_nx = np.ceil(np.linspace(1, nx, level)).astype(int)
+    list_ny = np.ceil(np.linspace(1, ny, level)).astype(int)
 
     for i in range(level):
         dir_path = dirName + '/snapshot_level' + str(i)
@@ -67,10 +66,10 @@ def Snapshot(img, level=10):
         stride = (math.floor(width / 2), math.floor(height / 2))
         y_start, y_end = (0, height)
 
-        for y in range(int(math.ceil(list_ny[i]))):
+        for y in range(list_ny[i]):
             x_start, x_end = (0, width)
 
-            for x in range(int(math.ceil(list_nx[i]))):
+            for x in range(list_nx[i]):
                 cv2.imwrite(dir_path + '/' + str(num_image) + '.jpg', image[y_start:y_end, x_start:x_end])
 
                 if list_nx[i] >= 2 and x == list_nx[i] - 2:
