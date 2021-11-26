@@ -1,10 +1,13 @@
 import os
 import time
+
+import cv2
 import numpy as np
 from PIL import Image
 
 import epll.denoise
 import pre_process.pre_process
+import post_process.post_process
 
 pardir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 
@@ -12,7 +15,6 @@ pardir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)
 class MopReM:
     def __init__(self, n):
         self.n = n
-
 
     def pre_process(self):
         datadir = os.path.join(pardir, 'data', self.n)
@@ -24,6 +26,7 @@ class MopReM:
         source = os.path.join(datadir, 'source.png')
         target = os.path.join(datadir, 'target.png')
         
+        # pre-process
         start = time.time()
         pre_process.pre_process.main(source, target, resultdir)
         end = time.time()
@@ -48,17 +51,22 @@ class MopReM:
 
 
     def post_process(self):
-        datadir = os.path.join(pardir, 'result/demoire', self.n)
+        datadir = os.path.join(pardir, 'data', self.n)
         assert os.path.exists(datadir), print('Post process: datadir not exists')
         resultdir = os.path.join(pardir, 'result/post_process', self.n)
         if not os.path.exists(resultdir):
             os.makedirs(resultdir)
 
-        source = os.path.join(datadir, 'source')
-        target = os.path.join(datadir, 'target')
+        source = os.path.join(datadir, 'source.png')
+        target = os.path.join(datadir, 'target.png')
+        
+        datadir = os.path.join(pardir, 'result/demoire', self.n)
+        assert os.path.exists(datadir), print('Post process: datadir not exists')
+        clean = os.path.join(datadir, '0-1.png')
 
+        # post-process
         start = time.time()
-        # post_process
+        post_process.post_process.main(source, target, clean, resultdir)
         end = time.time()
         print('Post processing time: {:.1f}s\n'.format(end-start))
 
