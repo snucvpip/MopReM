@@ -74,13 +74,13 @@ class MopReM:
 
         info = pre_process.pre_process.snapshot_info
         level = len(info)
-        img_width, img_height = info[0, 1]
+        img_width, img_height = info[0][1]
 
         for i in range(1, level):
             img_merge = np.empty(shape=(img_width, img_height, 3))
-            nx, ny = info[i, 0]
-            partial_width, partial_height = info[i, 1]
-            stride = info[i, 2]
+            nx, ny = info[i][0]
+            partial_width, partial_height = info[i][1]
+            stride = info[i][2]
             num = 1
 
             for y in range(ny):
