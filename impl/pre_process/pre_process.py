@@ -1,12 +1,13 @@
 import numpy as np
 
-from pre_process.pre_processing import *
+from pre_process.align import *
 import os
 import cv2
 import math
 from skimage.feature import peak_local_max
 from PIL import Image
 
+snapshot_info = []
 
 def GetLimitNxNy(img):
     pim = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -29,12 +30,6 @@ def Snapshot(img, resultdir, level=5):
     # the cropped images in neighborhood have same area for post-processing
     ######################################################
 
-    ##################### PARAMETERS #####################
-    # level: division in range (1 ~ nx), (1 ~ ny)
-    # nx: maximum number of dividing in x-axis
-    # ny: maximum number of dividing in y-axis
-    ######################################################
-
     ################### USAGE EXAMPLE ####################
     # Snapshot(5, 2, 2)
     # This usage will divide image in 5 levels.
@@ -45,8 +40,7 @@ def Snapshot(img, resultdir, level=5):
     # level1 = 3 pieces in x-axis X 3 pieces in y-axis = 9 pieces
     # level2 = 5 pieces in x-axis X 5 pieces in y-axis = 25 pieces
     ######################################################
-
-    snapshot_info = []
+    global snapshot_info
     nx, ny = GetLimitNxNy(img)
     list_nx = np.ceil(np.linspace(1, nx, level)).astype(int)
     list_ny = np.ceil(np.linspace(1, ny, level)).astype(int)
@@ -55,7 +49,8 @@ def Snapshot(img, resultdir, level=5):
 
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
-
+    
+    snapshot_info = []
     for i in range(level):
 
         width = int(math.ceil(img.shape[1] * 2 / (list_nx[i] + 1)))
@@ -70,7 +65,6 @@ def Snapshot(img, resultdir, level=5):
 
             for x in range(list_nx[i]):
                 cv2.imwrite(dir_path + '/' + str(i) + '-' + str(num_image) + '.png', img[y_start:y_end, x_start:x_end])
-
                 if list_nx[i] >= 2 and x == list_nx[i] - 2:
                     x_start = img.shape[1] - 1 - width
                     x_end = img.shape[1] - 1
@@ -87,13 +81,10 @@ def Snapshot(img, resultdir, level=5):
                 y_start += stride[1]
                 y_end += stride[1]
 
-        snapshot_info.append(((list_nx[i], list_ny[i]), (width, height)))
-        print('level{} Complete, nx: {}, ny: {}, width: {}, height: {}'.format(i, list_nx[i], list_ny[i], width, height))
-
-    return snapshot_info
+        snapshot_info.append(((list_nx[i], list_ny[i]), (width, height), stride))
+#         print('level{} Complete, nx: {}, ny: {}, width: {}, height: {}'.format(i, list_nx[i], list_ny[i], width, height))
 
 
 def main(source, target, resultdir):
     img = cv2.imread(source)
     Snapshot(img, resultdir)
-
