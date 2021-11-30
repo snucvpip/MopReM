@@ -41,16 +41,12 @@ class MopReM:
         if not os.path.exists(resultdir):
             os.makedirs(resultdir)
         start = time.time()
-        for i in range(5):
-            n = 0
-            if i == 1:
-                n = 16
-            elif i ==2:
-                n = 36
-            elif i ==3:
-                n = 81
-            elif i ==3:
-                n = 121
+        info = pre_process.pre_process.snapshot_info
+        level = len(info)
+        for i in range(level):
+            nx, ny = info[i][0]
+            n = nx*ny
+            print(n)
             for j in range(n):
                 name = str(i)+'-'+str(j+1)+'.png'
                 source = os.path.join(datadir, name)
@@ -61,7 +57,7 @@ class MopReM:
 
 
     def post_process(self):
-        datadir = os.path.join(pardir, 'result/demoire', self.n)
+        datadir = os.path.join(pardir, 'result/pre_process', self.n)
         assert os.path.exists(datadir), print('Post process: datadir not exists')
         resultdir = os.path.join(pardir, 'result/post_process', self.n)
         if not os.path.exists(resultdir):
