@@ -1,6 +1,9 @@
 import os
+from re import M
 import time
 from tqdm import tqdm
+from functools import partial
+from multiprocessing import Pool
 from glob import glob
 import cv2
 import numpy as np
@@ -51,7 +54,7 @@ class MopReM:
         print('Elapsed time : {:.1f}s\n'.format(end-start))
 
 
-    def demoire(self):
+    def demoire(self, background, moire, pooling=False):
         datadir = self.epll_datadir
         resultdir = self.epll_resultdir
 
@@ -63,14 +66,32 @@ class MopReM:
         files = next(os.walk(datadir))[2]
         files.sort()
         
-        start = time.time()
-        for f in files:
-            target = os.path.join(datadir, f)
-            #target = os.path.join(datadir, '2-23.png')
-            #epll.denoise.main(target, resultdir)
-            remove_background.remove_background.main(target, resultdir)
+        if pooling:
+            targets = [os.path.join(datadir, f) for f in files]
+            targets = targets[1:]
 
-        end = time.time()
+            start = time.time()
+            pool = Pool(processes=5)
+            # background seperation
+            pool.map(partial(epll.denoise.main, matfile=background, DC=True, resultdir=resultdir), targets)
+            # moire seperation
+            pool.map(partial(epll.denoise.main, matfile=moire, DC=False, resultdir=resultdir), targets)
+            pool.close()
+            pool.join()
+            end = time.time()
+
+        else:
+            start = time.time()
+            for f in files:
+                if f == '0-1.png':
+                    continue
+                target = os.path.join(datadir, f)
+                # background seperation
+                epll.denoise.main(target, background, True, resultdir)
+                # moire seperation
+                epll.denoise.main(target, moire, False, resultdir)
+                remove_background.remove_background.main(target, resultdir)
+            end = time.time()
 
         print('Elapsed time : {:.1f}s\n'.format(end-start))
 
@@ -166,6 +187,7 @@ class MopReM:
 
 
 if __name__ == '__main__':
+
     print()
     print('MopReM : Moiré Pattern Removal for Mobile, Texts/Diagrams on Single-colored Background')
     print('PIP team, GilHo Roh, Sangjun Son, Jiwon Lee, Dongseok choi')
@@ -181,8 +203,10 @@ if __name__ == '__main__':
     print()
 
     for imgdir in tqdm(imgs, total=len(imgs)):
+
         if imgdir == 'etc' or imgdir == '.ipynb_checkpoints':
             continue
+
         print()
         print('image directory : {}'.format(imgdir))
         print()
@@ -202,6 +226,10 @@ if __name__ == '__main__':
                                     epll_datadir, epll_resultdir, 
                                     post_datadir, post_resultdir )
 
-        model.pre_process()
-        model.demoire()
+        # model.pre_process()
+
+        model.demoire(  background='GSModel_8x8_200_2M_noDC_zeromean.mat',
+                        moire='GMM_8x8_200_1500.mat',
+                        pooling=True  )
+
         model.post_process()
