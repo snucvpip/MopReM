@@ -2,6 +2,8 @@ import os
 import time
 from tqdm import tqdm
 from glob import glob
+from functools import partial
+from multiprocessing import Pool
 
 import epll.denoise
 import pre_process.pre_process
@@ -49,7 +51,7 @@ class MopReM:
         print('Elapsed time : {:.1f}s\n'.format(end-start))
 
 
-    def demoire(self):
+    def demoire(self, pooling=False):
         datadir = self.epll_datadir
         resultdir = self.epll_resultdir
 
@@ -61,12 +63,24 @@ class MopReM:
         files = next(os.walk(datadir))[2]
         files.sort()
         
-        start = time.time()
-        for f in files:
-            # target = os.path.join(datadir, f)
-            target = os.path.join(datadir, '2-23.png')
-            epll.denoise.main(target, resultdir)
-        end = time.time()
+        if pooling:
+            targets = [os.path.join(datadir, f) for f in files]
+            targets = targets[1:]
+
+            start = time.time()
+            pool = Pool(processes=5)
+            pool.map(partial(epll.denoise.main, resultdir=resultdir), targets)
+            pool.close()
+            pool.join()
+            end = time.time()
+
+        else:
+            start = time.time()
+            for f in files:
+                target = os.path.join(datadir, f)
+                # target = os.path.join(datadir, '2-23.png')
+                epll.denoise.main(target, resultdir)
+            end = time.time()
 
         print('Elapsed time : {:.1f}s\n'.format(end-start))
 
@@ -129,5 +143,5 @@ if __name__ == '__main__':
                                     post_datadir, post_resultdir )
 
         model.pre_process()
-        model.demoire()
+        model.demoire(pooling=True)
         model.post_process()
