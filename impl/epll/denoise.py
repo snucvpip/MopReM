@@ -45,7 +45,7 @@ def denoise( target,
     if convert_type == 'L':
         targetI = np.array(Image.open(target).convert(convert_type))/255
         
-        print('grayscale image denoising...')
+        print('grayscale')
         cleanI = process(targetI, GS)
 
     elif convert_type == 'RGB':
@@ -55,11 +55,11 @@ def denoise( target,
         for i in range(3):
             print()
             if i == 0:
-                print('R channel denoising...')
+                print('R channel')
             elif i == 1:
-                print('G channel denoising...')
+                print('G channel')
             else :
-                print('B channel denoising...')
+                print('B channel')
 
             cleanI[:,:,i] = process(targetI[:,:,i], GS)
             
@@ -85,7 +85,7 @@ def save_result(cleanI, resultpath):
 
 def main(target, resultdir):
     # cleanI = np.array(Image.open(target).convert('RGB'))/255
-    cleanI = denoise(target=target, convert_type='RGB')
+    cleanI = denoise(target=target, convert_type='L')
     filename = os.path.basename(target)
     resultpath = os.path.join(resultdir, filename)
     save_result(cleanI, resultpath)

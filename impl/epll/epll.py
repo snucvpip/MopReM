@@ -69,6 +69,7 @@ def EPLLhalfQuadraticSplit(noiseI, rambda, patchSize, betas, T, I, LogLFunc, GS,
     cleanI = noiseI
     psnr = []
 
+    counter = 0
     for betaa in betas:
         loop_start = time.time()
 
@@ -91,8 +92,9 @@ def EPLLhalfQuadraticSplit(noiseI, rambda, patchSize, betas, T, I, LogLFunc, GS,
             # print('PSNR is:{:.2f} I1 PSNR:{:.2f}'.format(psnr[-1], 20*math.log10(1/np.std(I1-I))))
         
         loop_end = time.time()
-        print('loop time elapsed: {:.2f}'.format(loop_end-loop_start))
-    
+        counter += 1
+        print('loop time elapsed: {:.1f}s ({}/{})'.format(loop_end-loop_start, str(counter), str(len(betas))))
+
     cleanI = cleanI.reshape(noiseI.shape)
 
     for i in range(cleanI.shape[0]):
