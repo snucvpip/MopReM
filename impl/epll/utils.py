@@ -6,23 +6,32 @@ from scipy.io import loadmat
 import os
 
 
-def get_gs_matrix(path, filename='GSModel_8x8_200_2M_noDC_zeromean.mat'):
+def get_gs_matrix(path, filename='GSModel_8x8_200_2M_noDC_zeromean.mat', DC=False):
     '''
     .mat file loader\n
     only 'GSModel_8x8_200_2M_noDC_zeromean.mat' file load available.
     '''
     path = os.path.join(path, filename)
     mat = loadmat(path)
-
-    GS = mat['GS']
     ret = {}
 
-    ret['dim']           = GS['dim'][0,0][0][0]
-    ret['nmodels']       = GS['nmodels'][0,0][0][0]
-    ret['means']         = GS['means'][0,0]
-    ret['covs']          = GS['covs'][0,0]
-    ret['invcovs']       = GS['invcovs'][0,0]
-    ret['mixweights']    = GS['mixweights'][0,0]
+    # EPLL
+    if DC:  
+        GS = mat['GS']
+        ret['dim']           = GS['dim'][0,0][0][0]
+        ret['nmodels']       = GS['nmodels'][0,0][0][0]
+        ret['means']         = GS['means'][0,0]
+        ret['covs']          = GS['covs'][0,0]
+        ret['invcovs']       = GS['invcovs'][0,0]
+        ret['mixweights']    = GS['mixweights'][0,0]
+    
+    # NIPSGMM
+    else:   
+        GS = mat['GMM']
+        ret['nmodels']       = GS['nmodels'][0,0][0][0]
+        ret['mixweights']    = GS['mixweights'][0,0].T
+        ret['covs']          = GS['covs'][0,0]
+        ret['means']         = np.zeros((64, 200))
 
     return ret
 
