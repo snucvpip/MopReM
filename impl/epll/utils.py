@@ -6,12 +6,11 @@ from scipy.io import loadmat
 import os
 
 
-def get_gs_matrix(path, filename='GSModel_8x8_200_2M_noDC_zeromean.mat', DC=False):
+def get_gs_matrix(path, DC=False):
     '''
     .mat file loader\n
     only 'GSModel_8x8_200_2M_noDC_zeromean.mat' file load available.
     '''
-    path = os.path.join(path, filename)
     mat = loadmat(path)
     ret = {}
 

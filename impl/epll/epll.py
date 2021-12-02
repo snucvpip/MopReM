@@ -17,7 +17,7 @@ def loggausspdf2(X, sigma):
     return y
 
 
-def aprxMAPGMM(Y, patchSize, noiseSD, imsize, GS, excludeList=None, SigmaNoise=None, DC=False):
+def aprxMAPGMM(Y, patchSize, noiseSD, imsize, GS, excludeList, SigmaNoise, matpath, DC):
     # handle exclusion list - used for inpainting
     if not excludeList:
         excludeList = []
@@ -36,9 +36,7 @@ def aprxMAPGMM(Y, patchSize, noiseSD, imsize, GS, excludeList=None, SigmaNoise=N
 
     # calculate assignment probabilities for each mixture component for all
     # patches
-    workingdir = os.path.dirname(os.path.realpath(__file__))
-    datadir = os.path.join(workingdir, 'data')
-    GS2 = get_gs_matrix(datadir, 'GMM_8x8_200_1500.mat', DC)
+    GS2 = get_gs_matrix(matpath, DC)
     PYZ = np.zeros((GS['nmodels'],Y.shape[1]))
     for i in range(GS['nmodels']):
         GS2['covs'][:,:,i] = GS['covs'][:,:,i] + SigmaNoise
@@ -62,7 +60,7 @@ def aprxMAPGMM(Y, patchSize, noiseSD, imsize, GS, excludeList=None, SigmaNoise=N
     return Xhat
     
 
-def EPLLhalfQuadraticSplit(noiseI, rambda, patchSize, betas, T, I, LogLFunc, GS, excludeList=None, SigmaNoise=None, DC=False):
+def EPLLhalfQuadraticSplit(noiseI, rambda, patchSize, betas, T, I, LogLFunc, GS, excludeList, SigmaNoise, matpath, DC):
     RealNoiseSD = np.sqrt(1/(rambda/patchSize**2))
     cost = []
     beta = np.abs(betas[0]/4)
@@ -79,7 +77,7 @@ def EPLLhalfQuadraticSplit(noiseI, rambda, patchSize, betas, T, I, LogLFunc, GS,
         for _ in range(T):
             Z = im2col(cleanI, (patchSize, patchSize))
 
-            cleanZ = aprxMAPGMM(Z, patchSize, 1/np.sqrt(beta), noiseI.shape, GS, excludeList, SigmaNoise, DC)
+            cleanZ = aprxMAPGMM(Z, patchSize, 1/np.sqrt(beta), noiseI.shape, GS, excludeList, SigmaNoise, matpath, DC)
 
             I1 = scol2im(cleanZ, patchSize, noiseI.shape[0], noiseI.shape[1], 'average')
 

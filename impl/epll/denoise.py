@@ -9,7 +9,7 @@ from epll.epll import EPLLhalfQuadraticSplit
 from epll.utils import get_gs_matrix
 
 
-def process(noiseI, GS):
+def process(noiseI, GS, matpath, DC):
     patchSize = 8
     noiseSD = 25/255
     
@@ -30,23 +30,27 @@ def process(noiseI, GS):
                                     LogLFunc    = LogLFunc, 
                                     GS          = GS,
                                     excludeList = None,
-                                    SigmaNoise  = None 
+                                    SigmaNoise  = None,
+                                    matpath     = matpath,
+                                    DC          = DC
                                 )
 
     return cleanI
 
 
 def denoise( target,
-             datadir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data'),
-             convert_type = 'RGB' ):
+             matpath,
+             DC,
+             convert_type = 'RGB' 
+            ):
     convert_type = convert_type.upper()
-    GS = get_gs_matrix(path=datadir, filename='GMM_8x8_200_1500.mat', DC=False) 
+    GS = get_gs_matrix(path=matpath, DC=DC) 
 
     if convert_type == 'L':
         targetI = np.array(Image.open(target).convert(convert_type))/255
         
         print('grayscale')
-        cleanI = process(targetI, GS)
+        cleanI = process(targetI, GS, matpath, DC)
 
     elif convert_type == 'RGB':
         targetI = np.array(Image.open(target).convert(convert_type))/255
@@ -61,7 +65,7 @@ def denoise( target,
             else :
                 print('B channel')
 
-            cleanI[:,:,i] = process(targetI[:,:,i], GS)
+            cleanI[:,:,i] = process(targetI[:,:,i], GS, matpath, DC)
             
     else:
         print('ValueError: covert type should be grayscale(L) or RGB')
@@ -83,9 +87,19 @@ def save_result(cleanI, resultpath):
 
     plt.imsave(resultpath, cleanI, cmap=cmap)
 
-def main(target, resultdir):
+
+def main(target, matfile, DC, resultdir):
+    if DC:
+        print('background')
+    else:
+        print('moire')
+        
+    matdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
+    matpath = os.path.join(matdir, matfile)
+
     # cleanI = np.array(Image.open(target).convert('RGB'))/255
-    cleanI = denoise(target=target, convert_type='L')
+    cleanI = denoise(target=target, matpath=matpath, DC=DC, convert_type='L')
+
     filename = os.path.basename(target)
     resultpath = os.path.join(resultdir, filename)
     save_result(cleanI, resultpath)
