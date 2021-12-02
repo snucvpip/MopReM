@@ -1,7 +1,7 @@
 import os
 import time
-
 import cv2
+
 import numpy as np
 from PIL import Image
 
@@ -44,7 +44,8 @@ class MopReM:
 
         start = time.time()
         for f in files:
-            target = os.path.join(datadir, f)
+            # target = os.path.join(datadir, f)
+            target = os.path.join(datadir, '2-23.png')
             epll.denoise.main(target, resultdir)
         end = time.time()
         print('Demoiring time: {:.1f}s\n'.format(end-start))

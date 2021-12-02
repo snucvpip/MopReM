@@ -40,17 +40,15 @@ def denoise( target,
              datadir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data'),
              convert_type = 'RGB' ):
     convert_type = convert_type.upper()
-    GS = get_gs_matrix(datadir) 
+    GS = get_gs_matrix(path=datadir, filename='GMM_8x8_200_1500.mat', DC=False) 
 
     if convert_type == 'L':
-        # sourceI = np.array(Image.open(source).convert(convert_type))/255
         targetI = np.array(Image.open(target).convert(convert_type))/255
         
         print('grayscale image denoising...')
         cleanI = process(targetI, GS)
 
     elif convert_type == 'RGB':
-        # sourceI = np.array(Image.open(source).convert(convert_type))/255
         targetI = np.array(Image.open(target).convert(convert_type))/255
         cleanI = np.empty(targetI.shape)
 
@@ -72,7 +70,7 @@ def denoise( target,
     return cleanI
 
 
-def get_result(cleanI, resultpath):
+def save_result(cleanI, resultpath):
     assert os.path.exists(os.path.dirname(resultpath)), print('result directory not exists')
 
     if cleanI.ndim == 2:
@@ -83,12 +81,11 @@ def get_result(cleanI, resultpath):
         print('image dimesion should be 2 or 3')
         exit(-1)
 
-    plt.imsave(resultpath, cleanI)
-
+    plt.imsave(resultpath, cleanI, cmap=cmap)
 
 def main(target, resultdir):
-    cleanI = np.array(Image.open(target).convert('RGB'))/255
-    # cleanI = denoise(target=target, convert_type='RGB')
+    # cleanI = np.array(Image.open(target).convert('RGB'))/255
+    cleanI = denoise(target=target, convert_type='RGB')
     filename = os.path.basename(target)
     resultpath = os.path.join(resultdir, filename)
-    get_result(cleanI, resultpath)
+    save_result(cleanI, resultpath)
