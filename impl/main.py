@@ -1,27 +1,44 @@
 import os
 import time
-
+from tqdm import tqdm
+from glob import glob
 import cv2
 import numpy as np
-from PIL import Image
 
 import epll.denoise
 import pre_process.pre_process
-import post_process.post_process as post_process
 import remove_background.remove_background
+import post_process.post_process
 
 pardir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 
 
 class MopReM:
-    def __init__(self, n):
-        self.n = n
+    def __init__(self):
+        pass
+
+
+    @classmethod
+    def init_moprem(cls, pre_datadir, pre_resultdir,
+                    epll_datadir, epll_resultdir,
+                    post_datadir, post_resultdir):
+        model = MopReM()
+        model.pre_datadir = pre_datadir
+        model.pre_resultdir = pre_resultdir
+        model.epll_datadir = epll_datadir
+        model.epll_resultdir = epll_resultdir
+        model.post_datadir = post_datadir
+        model.post_resultdir = post_resultdir
+
+        return model
 
 
     def pre_process(self):
-        datadir = os.path.join(pardir, 'data', self.n)
+        datadir = self.pre_datadir
+        resultdir = self.pre_resultdir
+
         assert os.path.exists(datadir), print('Pre process: datadir not exists')
-        resultdir = os.path.join(pardir, 'result/pre_process', self.n)
+
         if not os.path.exists(resultdir):
             os.makedirs(resultdir)
 
@@ -31,41 +48,49 @@ class MopReM:
         start = time.time()
         pre_process.pre_process.main(source, target, resultdir)
         end = time.time()
-        print('Pre processing time: {:.1f}s'.format(end-start))
+        print('Elapsed time : {:.1f}s\n'.format(end-start))
 
 
     def demoire(self):
-        datadir = os.path.join(pardir, 'result/pre_process', self.n)
+        datadir = self.epll_datadir
+        resultdir = self.epll_resultdir
+
         assert os.path.exists(datadir), print('Demoire: datadir not exists')
-        resultdir = os.path.join(pardir, 'result/demoire', self.n)
+
         if not os.path.exists(resultdir):
             os.makedirs(resultdir)
+
+        files = next(os.walk(datadir))[2]
+        files.sort()
+        
         start = time.time()
-        info = pre_process.pre_process.snapshot_info
-        level = len(info)
-        for i in range(level):
-            nx, ny = info[i][0]
-            n = nx*ny
-            for j in range(n):
-                name = str(i)+'-'+str(j+1)+'.png'
-                source = os.path.join(datadir, name)
-                remove_background.remove_background.main(source, resultdir)
-                
+        for f in files:
+            target = os.path.join(datadir, f)
+            #target = os.path.join(datadir, '2-23.png')
+            #epll.denoise.main(target, resultdir)
+            remove_background.remove_background.main(target, resultdir)
+
         end = time.time()
-        print('Demoiring time: {:.1f}s'.format(end-start))
+
+        print('Elapsed time : {:.1f}s\n'.format(end-start))
 
 
     def post_process(self):
-        datadir = os.path.join(pardir, 'result/demoire', self.n)
-        assert os.path.exists(datadir), print('Post process: datadir not exists')
-        resultdir = os.path.join(pardir, 'result/post_process', self.n)
+        datadir = self.post_datadir
+        resultdir = self.post_resultdir
+
+        assert os.path.exists(datadir), print('Demoire: datadir not exists')
+        
         if not os.path.exists(resultdir):
             os.makedirs(resultdir)
 
-        source = os.path.join(datadir, 'source')
-        target = os.path.join(datadir, 'target')
+        source = os.path.join(datadir, 'source.png')
+        target = os.path.join(datadir, 'target.png')
+        clean = os.path.join(datadir, '0-1.png')
 
         start = time.time()
+        post_process.post_process.main(source, target, clean, resultdir)
+        end = time.time()
 
         info = pre_process.pre_process.snapshot_info
         level = len(info)
@@ -139,45 +164,44 @@ class MopReM:
         im = cv2.imread(source, cv2.IMREAD_COLOR)
         imReference = cv2.imread(target, cv2.IMREAD_COLOR)
 
-        src, tar = post_process.CropImage(im, imReference)
-        mse = post_process.mean_squared_error(src, tar)
-        psnr = post_process.peak_signal_noise_ratio(src, tar)
-        ssim, diff = post_process.structural_similarity(src, tar, multichannel=True, full=True)
-
-        diff = (diff * 255).astype("uint8")
-        diff = cv2.cvtColor(diff, cv2.COLOR_RGB2GRAY)
-
-        fig, ax = post_process.plt.subplot(ncols=4, figsize=(15, 5))
-        ax[0].imshow(src), ax[0].set_title('Source')
-        ax[1].imshow(tar), ax[1].set_title('Target')
-        ax[2].imshow(np.abs(src - tar)), ax[2].set_title(f'MSE:{round(mse, 2)}, PSNR:{round(psnr, 2)}, SSIM:{round(ssim, 2)}')
-        ax[3].imshow(diff, cmap='gray', vmin=0, vmax=255), ax[3].set_title('Difference')
-        post_process.plt.show()
-
-        cv2.imwrite(os.path.join(resultdir, "source_cropped.png"), src)
-        cv2.imwrite(os.path.join(resultdir, "target_cropped.png"), tar)
-
-        end = time.time()
-        print('Post processing time: {:.1f}s'.format(end-start))
-
 
 if __name__ == '__main__':
-    datadir = os.path.join(pardir, 'data')
-    childlist = next(os.walk(datadir))[1]
-    childlist.sort()
-    print('total data number: ', len(childlist))
+    print()
+    print('MopReM : Moiré Pattern Removal for Mobile, Texts/Diagrams on Single-colored Background')
+    print('PIP team, GilHo Roh, Sangjun Son, Jiwon Lee, Dongseok choi')
+    print('2021 fall SNU computer vision project')
+    print()
 
-    start = time.time()
-    for dirname in childlist:
-        if dirname == 'etc':
+    datadir = os.path.join(pardir, 'data')
+    imgs = next(os.walk(datadir))[1]
+    imgs.sort()
+
+    print()
+    print('total data number: {}'.format(len(imgs)))
+    print()
+
+    for imgdir in tqdm(imgs, total=len(imgs)):
+        if imgdir == 'etc' or imgdir == '.ipynb_checkpoints':
             continue
-        print('\ncurrent directory : {}'.format(dirname))
-        loop_start = time.time()
-        model = MopReM(dirname)
+        print()
+        print('image directory : {}'.format(imgdir))
+        print()
+
+        resultdir = os.path.join(pardir, 'result', imgdir)
+
+        pre_datadir = os.path.join(datadir, imgdir)
+        pre_resultdir = os.path.join(resultdir, 'pre_process')
+
+        epll_datadir = pre_resultdir
+        epll_resultdir = os.path.join(resultdir, 'demoire')
+
+        post_datadir = epll_resultdir
+        post_resultdir = os.path.join(resultdir, 'post_process')
+
+        model = MopReM.init_moprem( pre_datadir, pre_resultdir, 
+                                    epll_datadir, epll_resultdir, 
+                                    post_datadir, post_resultdir )
+
         model.pre_process()
         model.demoire()
         model.post_process()
-        loop_end = time.time()
-        print('demoireing time: {}s\n'.format(loop_end-loop_start))
-    end = time.time()
-    print('Total time: {}s'.format(end-start))

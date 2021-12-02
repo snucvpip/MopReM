@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 from skimage.segmentation import flood
@@ -121,11 +122,11 @@ def Boundaries(pim):
 def CropImage(im, imReference, tolerance=70):
     fim = Frame(im, tolerance=tolerance)
     vim = Boundaries(fim)
-    print(vim)
+#     print(vim)
 
     fimReference = Frame(imReference)
     vimReference = Boundaries(fimReference)
-    print(vimReference)
+#     print(vimReference)
     R = np.array([np.min(vimReference, 0), np.max(vimReference, 0)])
     
     fig, ax = plt.subplots(ncols=2, figsize=(10, 5))
@@ -144,3 +145,47 @@ def CropImage(im, imReference, tolerance=70):
     src =      result[R[0,1]:R[1,1], R[0,0]:R[1,0]]
     tar = imReference[R[0,1]:R[1,1], R[0,0]:R[1,0]]
     return src, tar
+  
+def main(source, target, clean, resultdir):
+    im = cv2.imread(source)
+    imReference = cv2.imread(target)
+    imClean = cv2.imread(clean)
+
+    src, tar = CropImage(im, imReference)
+    cle, tar = CropImage(imClean, imReference)
+    
+    mse_src = mean_squared_error(src, tar)
+    psnr_src = peak_signal_noise_ratio(src, tar)
+    ssim_src, diff_src = structural_similarity(src, tar, multichannel=True, full=True)
+    
+    mse_cle = mean_squared_error(cle, tar)
+    psnr_cle = peak_signal_noise_ratio(cle, tar)
+    ssim_cle, diff_cle = structural_similarity(cle, tar, multichannel=True, full=True)
+
+    diff_src = (diff_src * 255).astype("uint8")
+    diff_src = cv2.cvtColor(diff_src, cv2.COLOR_RGB2GRAY)
+    
+    diff_cle = (diff_cle * 255).astype("uint8")
+    diff_cle = cv2.cvtColor(diff_cle, cv2.COLOR_RGB2GRAY)
+    
+    cv2.imwrite(os.path.join(resultdir, "source_cropped.png"), src)
+    cv2.imwrite(os.path.join(resultdir, "clean_cropped.png"), cle)
+    cv2.imwrite(os.path.join(resultdir, "target_cropped.png"), tar)
+
+    src = cv2.cvtColor(src, cv2.COLOR_BGR2RGB)
+    cle = cv2.cvtColor(cle, cv2.COLOR_BGR2RGB)
+    tar = cv2.cvtColor(tar, cv2.COLOR_BGR2RGB)
+    
+    fig, ax = plt.subplots(ncols=4, nrows=2, figsize=(15, 10))
+    ax[0,0].imshow(src), ax[0,0].set_title('Source')
+    ax[0,1].imshow(tar), ax[0,1].set_title('Target')
+    ax[0,2].imshow(np.abs(src - tar)), ax[0,2].set_title(f'MSE:{round(mse_src, 2)}, PSNR:{round(psnr_src, 2)}, SSIM:{round(ssim_src, 2)}')
+    ax[0,3].imshow(diff_src, cmap='gray', vmin=0, vmax=255), ax[0,3].set_title('Difference')
+    
+    ax[1,0].imshow(cle), ax[1,0].set_title('Clean')
+    ax[1,1].imshow(tar), ax[1,1].set_title('Target')
+    ax[1,2].imshow(np.abs(cle - tar)), ax[1,2].set_title(f'MSE:{round(mse_cle, 2)}, PSNR:{round(psnr_cle, 2)}, SSIM:{round(ssim_cle, 2)}')
+    ax[1,3].imshow(diff_cle, cmap='gray', vmin=0, vmax=255), ax[1,3].set_title('Difference')
+    plt.tight_layout()
+    plt.savefig(os.path.join(resultdir, 'result.pdf'))
+

@@ -86,5 +86,5 @@ def Snapshot(img, resultdir, level=5):
 
 
 def main(source, target, resultdir):
-    img = np.array(Image.open(source))
+    img = cv2.imread(source)
     Snapshot(img, resultdir)
