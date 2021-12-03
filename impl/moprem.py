@@ -16,51 +16,22 @@ import demoire.remove_background.remove_background as remove_background
 
 pardir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 
-
 class MopReM:
     def __init__(self, imgdir):
-        datadir = os.path.join(pardir, 'data')
-        resultdir = os.path.join(pardir, 'result', imgdir)
+        self.datadir = os.path.join(pardir, 'data')
+        self.resultdir = os.path.join(pardir, 'result', imgdir)
 
-        pre_datadir = os.path.join(datadir, imgdir)
-        pre_resultdir = os.path.join(resultdir, 'pre')
+        self.pre_datadir = os.path.join(self.datadir, imgdir)
+        self.pre_resultdir = os.path.join(self.resultdir, 'pre')
 
-        epll_datadir = pre_resultdir
-        epll_resultdir = os.path.join(resultdir, 'epll')
+        self.demoire_datadir = self.pre_resultdir
+        self.demoire_resultdir = os.path.join(self.resultdir, 'demoire')
 
-        remove_background_datadir = pre_resultdir
-        # remove_background_datadir = epll_resultdir
-        remove_background_resultdir = os.path.join(resultdir, 'remove_background')
+        self.post_datadir = self.demoire_resultdir
+        self.post_resultdir = os.path.join(self.resultdir, 'post')
 
-        post_datadir = remove_background_resultdir
-        # post_datadir = epll_resultdir
-        post_resultdir = os.path.join(resultdir, 'post')
-
-        eval_datadir = post_resultdir
-        eval_resultdir = os.path.join(resultdir, 'eval')
-
-        self.init_moprem(pre_datadir, pre_resultdir, 
-                         epll_datadir, epll_resultdir, 
-                         post_datadir, post_resultdir,
-                         eval_datadir, eval_resultdir,
-                         remove_background_datadir, remove_background_resultdir )
-
-    def init_moprem(self, 
-                    pre_datadir, pre_resultdir,
-                    epll_datadir, epll_resultdir,
-                    post_datadir, post_resultdir,
-                    eval_datadir, eval_resultdir,
-                    remove_background_datadir, remove_background_resultdir):
-        self.pre_datadir                   = pre_datadir
-        self.pre_resultdir                 = pre_resultdir
-        self.epll_datadir                  = epll_datadir
-        self.epll_resultdir                = epll_resultdir
-        self.post_datadir                  = post_datadir
-        self.post_resultdir                = post_resultdir
-        self.eval_datadir                  = eval_datadir
-        self.eval_resultdir                = eval_resultdir
-        self.remove_background_datadir     = remove_background_datadir
-        self.remove_background_resultdir   = remove_background_resultdir
+        self.eval_datadir = self.post_resultdir
+        self.eval_resultdir = os.path.join(self.resultdir, 'eval')
         
     def pre(self):
         datadir = self.pre_datadir
@@ -82,14 +53,6 @@ class MopReM:
 
     def demoire(self):
         def epll(background, moire, pooling=False):
-            datadir = self.epll_datadir
-            resultdir = self.epll_resultdir
-
-            assert os.path.exists(datadir), print('EPLL: datadir not exists')
-
-            if not os.path.exists(resultdir):
-                os.makedirs(resultdir)
-
             files = next(os.walk(datadir))[2]
             files.sort()
 
@@ -123,14 +86,6 @@ class MopReM:
 
 
         def remove_bg():
-            datadir = self.remove_background_datadir
-            resultdir = self.remove_background_resultdir
-
-            assert os.path.exists(datadir), print('Remove background: datadir not exists')
-
-            if not os.path.exists(resultdir):
-                os.makedirs(resultdir)
-
             files = next(os.walk(datadir))[2]
             files.sort()
 
@@ -141,6 +96,12 @@ class MopReM:
             end = time.time()
             print('  Remove background processing time\t+{:.2f}s'.format(end-start))
 
+        datadir = self.demoire_datadir
+        resultdir = self.demoire_resultdir
+        assert os.path.exists(datadir), print('Demoire: datadir not exists')
+        if not os.path.exists(resultdir):
+            os.makedirs(resultdir)
+            
         remove_bg()
         return self
 
