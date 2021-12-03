@@ -18,31 +18,50 @@ pardir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)
 
 
 class MopReM:
-    def __init__(self):
-        pass
+    def __init__(self, imgdir):
+        datadir = os.path.join(pardir, 'data')
+        resultdir = os.path.join(pardir, 'result', imgdir)
 
+        pre_datadir = os.path.join(datadir, imgdir)
+        pre_resultdir = os.path.join(resultdir, 'pre')
 
-    @classmethod
-    def init_moprem(cls, pre_datadir, pre_resultdir,
+        epll_datadir = pre_resultdir
+        epll_resultdir = os.path.join(resultdir, 'epll')
+
+        remove_background_datadir = pre_resultdir
+        # remove_background_datadir = epll_resultdir
+        remove_background_resultdir = os.path.join(resultdir, 'remove_background')
+
+        post_datadir = remove_background_resultdir
+        # post_datadir = epll_resultdir
+        post_resultdir = os.path.join(resultdir, 'post')
+
+        eval_datadir = post_resultdir
+        eval_resultdir = os.path.join(resultdir, 'eval')
+
+        self.init_moprem(pre_datadir, pre_resultdir, 
+                         epll_datadir, epll_resultdir, 
+                         post_datadir, post_resultdir,
+                         eval_datadir, eval_resultdir,
+                         remove_background_datadir, remove_background_resultdir )
+
+    def init_moprem(self, 
+                    pre_datadir, pre_resultdir,
                     epll_datadir, epll_resultdir,
                     post_datadir, post_resultdir,
                     eval_datadir, eval_resultdir,
                     remove_background_datadir, remove_background_resultdir):
-        model = cls()
-        model.pre_datadir                   = pre_datadir
-        model.pre_resultdir                 = pre_resultdir
-        model.epll_datadir                  = epll_datadir
-        model.epll_resultdir                = epll_resultdir
-        model.post_datadir                  = post_datadir
-        model.post_resultdir                = post_resultdir
-        model.eval_datadir                  = eval_datadir
-        model.eval_resultdir                = eval_resultdir
-        model.remove_background_datadir     = remove_background_datadir
-        model.remove_background_resultdir   = remove_background_resultdir
-
-        return model
-
-
+        self.pre_datadir                   = pre_datadir
+        self.pre_resultdir                 = pre_resultdir
+        self.epll_datadir                  = epll_datadir
+        self.epll_resultdir                = epll_resultdir
+        self.post_datadir                  = post_datadir
+        self.post_resultdir                = post_resultdir
+        self.eval_datadir                  = eval_datadir
+        self.eval_resultdir                = eval_resultdir
+        self.remove_background_datadir     = remove_background_datadir
+        self.remove_background_resultdir   = remove_background_resultdir
+        
     def pre(self):
         datadir = self.pre_datadir
         resultdir = self.pre_resultdir
@@ -59,69 +78,71 @@ class MopReM:
         pre_process.main(source, target, resultdir)
         end = time.time()
         print('  Pre processing time\t\t\t+{:.2f}s'.format(end-start))
+        return self
+
+    def demoire(self):
+        def epll(background, moire, pooling=False):
+            datadir = self.epll_datadir
+            resultdir = self.epll_resultdir
+
+            assert os.path.exists(datadir), print('EPLL: datadir not exists')
+
+            if not os.path.exists(resultdir):
+                os.makedirs(resultdir)
+
+            files = next(os.walk(datadir))[2]
+            files.sort()
+
+            if pooling:
+                targets = [os.path.join(datadir, f) for f in files]
+                targets = targets[1:]
+
+                start = time.time()
+                pool = Pool(processes=5)
+                # background seperation
+                pool.map(partial(epll.main, matfile=background, DC=True, resultdir=resultdir), targets)
+                # moire seperation
+                pool.map(partial(epll.main, matfile=moire, DC=False, resultdir=resultdir), targets)
+                pool.close()
+                pool.join()
+                end = time.time()
+
+            else:
+                start = time.time()
+                for f in files:
+                    if f == '0-1.png':
+                        continue
+                    target = os.path.join(datadir, f)
+                    # background seperation
+                    epll.main(target, background, True, resultdir)
+                    # moire seperation
+                    epll.main(target, moire, False, resultdir)
+                end = time.time()
+
+            print('  Epll processing time\t\t\t+{:.2f}s'.format(end-start))
 
 
-    def epll(self, background, moire, pooling=False):
-        datadir = self.epll_datadir
-        resultdir = self.epll_resultdir
+        def remove_bg():
+            datadir = self.remove_background_datadir
+            resultdir = self.remove_background_resultdir
 
-        assert os.path.exists(datadir), print('EPLL: datadir not exists')
+            assert os.path.exists(datadir), print('Remove background: datadir not exists')
 
-        if not os.path.exists(resultdir):
-            os.makedirs(resultdir)
+            if not os.path.exists(resultdir):
+                os.makedirs(resultdir)
 
-        files = next(os.walk(datadir))[2]
-        files.sort()
-        
-        if pooling:
-            targets = [os.path.join(datadir, f) for f in files]
-            targets = targets[1:]
+            files = next(os.walk(datadir))[2]
+            files.sort()
 
-            start = time.time()
-            pool = Pool(processes=5)
-            # background seperation
-            pool.map(partial(epll.main, matfile=background, DC=True, resultdir=resultdir), targets)
-            # moire seperation
-            pool.map(partial(epll.main, matfile=moire, DC=False, resultdir=resultdir), targets)
-            pool.close()
-            pool.join()
-            end = time.time()
-
-        else:
             start = time.time()
             for f in files:
-                if f == '0-1.png':
-                    continue
                 target = os.path.join(datadir, f)
-                # background seperation
-                epll.main(target, background, True, resultdir)
-                # moire seperation
-                epll.main(target, moire, False, resultdir)
+                remove_background.main(target, resultdir)
             end = time.time()
+            print('  Remove background processing time\t+{:.2f}s'.format(end-start))
 
-        print('  Epll processing time\t\t\t+{:.2f}s'.format(end-start))
-
-    
-    def remove_background(self):
-        datadir = self.remove_background_datadir
-        resultdir = self.remove_background_resultdir
-
-        assert os.path.exists(datadir), print('Remove background: datadir not exists')
-
-        if not os.path.exists(resultdir):
-            os.makedirs(resultdir)
-
-        files = next(os.walk(datadir))[2]
-        files.sort()
-
-        start = time.time()
-        for f in files:
-            target = os.path.join(datadir, f)
-            remove_background.main(target, resultdir)
-        end = time.time()
-
-        print('  Remove background processing time\t+{:.2f}s'.format(end-start))
-
+        remove_bg()
+        return self
 
     def post(self):
         datadir = self.post_datadir
@@ -137,6 +158,7 @@ class MopReM:
         post_process.main(pre_process.snapshot_info, datadir, resultdir)
         end = time.time()
         print('  Post processing time\t\t\t+{:.2f}s'.format(end-start))
+        return self
 
         
     def eval(self):
@@ -173,6 +195,7 @@ class MopReM:
         eval.main(source, target, best_clean, resultdir)
         end = time.time()
         print('  Eval time\t\t\t\t+{:.2f}s'.format(end-start))
+        return self
 
 
 if __name__ == '__main__':
@@ -195,41 +218,10 @@ if __name__ == '__main__':
         print('\n--------------------------------------------------')
         print('\'{}\''.format(imgdir))
 
-        resultdir = os.path.join(pardir, 'result', imgdir)
-
-        pre_datadir = os.path.join(datadir, imgdir)
-        pre_resultdir = os.path.join(resultdir, 'pre')
-
-        epll_datadir = pre_resultdir
-        epll_resultdir = os.path.join(resultdir, 'epll')
-
-        remove_background_datadir = pre_resultdir
-        # remove_background_datadir = epll_resultdir
-        remove_background_resultdir = os.path.join(resultdir, 'remove_background')
-
-        post_datadir = remove_background_resultdir
-        # post_datadir = epll_resultdir
-        post_resultdir = os.path.join(resultdir, 'post')
-
-        eval_datadir = post_resultdir
-        eval_resultdir = os.path.join(resultdir, 'eval')
-
-        model = MopReM.init_moprem( pre_datadir, pre_resultdir, 
-                                    epll_datadir, epll_resultdir, 
-                                    post_datadir, post_resultdir,
-                                    eval_datadir, eval_resultdir,
-                                    remove_background_datadir, remove_background_resultdir )
-
+        model = MopReM(imgdir)
         model.pre()
-
-        # model.epll(  background='GSModel_8x8_200_2M_noDC_zeromean.mat',
-        #                 moire='GMM_8x8_200_1500.mat',
-        #                 pooling=True  )
-
-        model.remove_background()
-
+        model.demoire()
         model.post()
-
         model.eval()
 
     end = time.time()

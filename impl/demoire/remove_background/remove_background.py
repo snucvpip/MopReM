@@ -11,10 +11,11 @@ def seg(img):
 
     I = np.array(rgb)
     x, y, z = I.shape
-    for i in range(x):
-        for j in range(y):
-            if thresh[i][j] <=254:
-                I[i][j] = [255,255,255]
+    I[thresh <= 254] = [255,255,255]
+#     for i in range(x):
+#         for j in range(y):
+#             if thresh[i][j] <=254:
+#                 I[i][j] = [255,255,255]
                 
     I2 = cv.GaussianBlur(I, (3,3), 0.5) 
     return I2

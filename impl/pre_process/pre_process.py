@@ -12,7 +12,7 @@ snapshot_info = []
 def GetLimitNxNy(img):
     pim = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     height, width = pim.shape
-    n_pixel = 10
+    n_pixel = 30
         
     coordinates = np.array(peak_local_max(pim, min_distance=3))
     N = coordinates.shape[0]
@@ -22,7 +22,7 @@ def GetLimitNxNy(img):
     return tuple(np.array([width, height]) // int(d * n_pixel))
 
 
-def Snapshot(img, resultdir, level=5):
+def Snapshot(img, resultdir, level=3):
     #################### EXPLANATION #####################
     # This function makes snapshots of each level
     # The level is equivalent of magnification (the higher level is, the more magnified image is)
