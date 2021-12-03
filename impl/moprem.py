@@ -183,7 +183,7 @@ if __name__ == '__main__':
     print('2021 fall SNU computer vision project')
     print()
 
-    exclude = ['etc', '.ipynb_checkpoints', 'physics']
+    exclude = ['etc', '.ipynb_checkpoints']
     datadir = os.path.join(pardir, 'data')
     imgs = [dirname for dirname in next(os.walk(datadir))[1] if not (dirname in exclude)]
     imgs.sort()
