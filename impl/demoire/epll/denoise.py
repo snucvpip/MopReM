@@ -9,7 +9,7 @@ from demoire.epll.epll import EPLLhalfQuadraticSplit
 from demoire.epll.utils import get_gs_matrix
 
 
-def process(noiseI, GS):
+def process(noiseI, GS, matpath, DC):
     patchSize = 8
     noiseSD = 25/255
     
@@ -30,40 +30,42 @@ def process(noiseI, GS):
                                     LogLFunc    = LogLFunc, 
                                     GS          = GS,
                                     excludeList = None,
-                                    SigmaNoise  = None 
+                                    SigmaNoise  = None,
+                                    matpath     = matpath,
+                                    DC          = DC
                                 )
 
     return cleanI
 
 
 def denoise( target,
-             datadir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data'),
-             convert_type = 'RGB' ):
+             matpath,
+             DC,
+             convert_type = 'RGB' 
+            ):
     convert_type = convert_type.upper()
-    GS = get_gs_matrix(datadir) 
+    GS = get_gs_matrix(path=matpath, DC=DC) 
 
     if convert_type == 'L':
-        # sourceI = np.array(Image.open(source).convert(convert_type))/255
         targetI = np.array(Image.open(target).convert(convert_type))/255
         
-        print('grayscale image denoising...')
-        cleanI = process(targetI, GS)
+        print('grayscale')
+        cleanI = process(targetI, GS, matpath, DC)
 
     elif convert_type == 'RGB':
-        # sourceI = np.array(Image.open(source).convert(convert_type))/255
         targetI = np.array(Image.open(target).convert(convert_type))/255
         cleanI = np.empty(targetI.shape)
 
         for i in range(3):
             print()
             if i == 0:
-                print('R channel denoising...')
+                print('R channel')
             elif i == 1:
-                print('G channel denoising...')
+                print('G channel')
             else :
-                print('B channel denoising...')
+                print('B channel')
 
-            cleanI[:,:,i] = process(targetI[:,:,i], GS)
+            cleanI[:,:,i] = process(targetI[:,:,i], GS, matpath, DC)
             
     else:
         print('ValueError: covert type should be grayscale(L) or RGB')
@@ -72,7 +74,7 @@ def denoise( target,
     return cleanI
 
 
-def get_result(cleanI, resultpath):
+def save_result(cleanI, resultpath):
     assert os.path.exists(os.path.dirname(resultpath)), print('result directory not exists')
 
     if cleanI.ndim == 2:
@@ -83,12 +85,21 @@ def get_result(cleanI, resultpath):
         print('image dimesion should be 2 or 3')
         exit(-1)
 
-    plt.imsave(resultpath, cleanI)
+    plt.imsave(resultpath, cleanI, cmap=cmap)
 
 
-def main(target, resultdir):
-    cleanI = np.array(Image.open(target).convert('RGB'))/255
-    # cleanI = denoise(target=target, convert_type='RGB')
+def main(target, matfile, DC, resultdir):
+    if DC:
+        print('background')
+    else:
+        print('moire')
+        
+    matdir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
+    matpath = os.path.join(matdir, matfile)
+
+    # cleanI = np.array(Image.open(target).convert('RGB'))/255
+    cleanI = denoise(target=target, matpath=matpath, DC=DC, convert_type='L')
+
     filename = os.path.basename(target)
     resultpath = os.path.join(resultdir, filename)
-    get_result(cleanI, resultpath)
+    save_result(cleanI, resultpath)
