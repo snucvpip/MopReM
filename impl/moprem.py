@@ -90,7 +90,7 @@ class MopReM:
         else:
             start = time.time()
             for f in files:
-                if f == '0-1.png':
+                if not f == '1-1.png':
                     continue
                 target = os.path.join(datadir, f)
                 # background seperation
@@ -183,7 +183,7 @@ if __name__ == '__main__':
     print('2021 fall SNU computer vision project')
     print()
 
-    exclude = ['etc', '.ipynb_checkpoints']
+    exclude = ['etc', '.ipynb_checkpoints', 'physics']
     datadir = os.path.join(pardir, 'data')
     imgs = [dirname for dirname in next(os.walk(datadir))[1] if not (dirname in exclude)]
     imgs.sort()
@@ -203,15 +203,15 @@ if __name__ == '__main__':
         epll_datadir = pre_resultdir
         epll_resultdir = os.path.join(resultdir, 'epll')
 
-        remove_background_datadir = pre_resultdir
-        # remove_background_datadir = epll_resultdir
+        remove_background_datadir = epll_resultdir
         remove_background_resultdir = os.path.join(resultdir, 'remove_background')
 
-        post_datadir = remove_background_resultdir
-        # post_datadir = epll_resultdir
+        post_datadir = epll_resultdir
+        # post_datadir = remove_background_resultdir
         post_resultdir = os.path.join(resultdir, 'post')
 
-        eval_datadir = post_resultdir
+        eval_datadir = epll_resultdir
+        # eval_datadir = post_resultdir
         eval_resultdir = os.path.join(resultdir, 'eval')
 
         model = MopReM.init_moprem( pre_datadir, pre_resultdir, 
@@ -222,13 +222,13 @@ if __name__ == '__main__':
 
         model.pre()
 
-        # model.epll(  background='GSModel_8x8_200_2M_noDC_zeromean.mat',
-        #                 moire='GMM_8x8_200_1500.mat',
-        #                 pooling=True  )
+        model.epll(  background='GSModel_8x8_200_2M_noDC_zeromean.mat',
+                     moire='GMM_8x8_200_1500.mat',
+                     pooling=False  )
 
-        model.remove_background()
+        # model.remove_background()
 
-        model.post()
+        # model.post()
 
         model.eval()
 

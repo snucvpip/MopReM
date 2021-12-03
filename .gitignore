@@ -1,6 +1,7 @@
 .DS_Store
 result/*
 .ipynb_checkpoints/*
+sota/epll/NIPSGMM/data
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
