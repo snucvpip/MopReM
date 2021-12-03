@@ -5,6 +5,13 @@ import cv2
 def main(info, datadir, resultdir):
     level = len(info)
     img_width, img_height = info[0][1]
+    
+    filename = '0-1.png'
+    filepath = os.path.join(datadir, filename)
+    img_zero = cv2.imread(filepath,  cv2.IMREAD_COLOR)
+    result_name = 'clean0.png'
+    result_path = os.path.join(resultdir, result_name)
+    cv2.imwrite(result_path, img_zero)
 
     for i in range(1, level):
         img_merge = np.empty(shape=(img_height, img_width, 3))
@@ -63,4 +70,5 @@ def main(info, datadir, resultdir):
 
         result_name = 'clean'+str(i)+'.png'
         result_path = os.path.join(resultdir, result_name)
+        np.seterr(divide='ignore', invalid='ignore')
         cv2.imwrite(result_path, img_merge/acc_array)

@@ -98,7 +98,7 @@ def main(target, matfile, DC, resultdir):
     matpath = os.path.join(matdir, matfile)
 
     # cleanI = np.array(Image.open(target).convert('RGB'))/255
-    cleanI = denoise(target=target, matpath=matpath, DC=DC, convert_type='RGB')
+    cleanI = denoise(target=target, matpath=matpath, DC=DC, convert_type='L')
 
     img_type = os.path.basename(target).split('.')[-1]
     filename = ''.join(os.path.basename(target).split('.')[:-1]) + '_' + ('background' if DC else 'moire') + '.' + img_type
