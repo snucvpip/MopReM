@@ -95,9 +95,11 @@ def EPLLhalfQuadraticSplit(noiseI, rambda, patchSize, betas, T, I, LogLFunc, GS,
 
     cleanI = cleanI.reshape(noiseI.shape)
 
-    for i in range(cleanI.shape[0]):
-        for j in range(cleanI.shape[1]):
-            cleanI[i][j] = 1 if cleanI[i][j] > 1 else cleanI[i][j]
-            cleanI[i][j] = 0 if cleanI[i][j] < 0 else cleanI[i][j]
+    cleanI[cleanI > 1] = 1
+    cleanI[cleanI < 0] = 0
+#     for i in range(cleanI.shape[0]):
+#         for j in range(cleanI.shape[1]):
+#             cleanI[i][j] = 1 if cleanI[i][j] > 1 else cleanI[i][j]
+#             cleanI[i][j] = 0 if cleanI[i][j] < 0 else cleanI[i][j]
 
     return cleanI, psnr, cost
