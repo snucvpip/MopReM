@@ -117,12 +117,12 @@ def Boundaries(pim):
         vertices[3] = v[1]
     return vertices
 
-def CropImage(im, imReference, tolerance=70):
+def CropImage(im, imReference, tolerance=100):
     fim = Frame(im, tolerance=tolerance)
     vim = Boundaries(fim)
     print(vim)
 
-    fimReference = Frame(imReference)
+    fimReference = Frame(imReference, tolerance=tolerance)
     vimReference = Boundaries(fimReference)
     print(vimReference)
     R = np.array([np.min(vimReference, 0), np.max(vimReference, 0)])

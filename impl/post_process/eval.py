@@ -119,7 +119,7 @@ def Boundaries(pim):
         vertices[3] = v[1]
     return vertices
 
-def CropImage(im, imReference, tolerance=70):
+def CropImage(im, imReference, tolerance=100):
     fim = Frame(im, tolerance=tolerance)
     vim = Boundaries(fim)
 #     print(vim)
@@ -147,13 +147,13 @@ def CropImage(im, imReference, tolerance=70):
     tar = imReference[R[0,1]:R[1,1], R[0,0]:R[1,0]]
     return src, tar
   
-def main(source, target, clean, resultdir):
+def main(source, target, clean, resultdir, tol=100):
     im = cv2.imread(source)
     imReference = cv2.imread(target)
     imClean = cv2.imread(clean)
 
-    src, tar = CropImage(im, imReference)
-    cle, tar = CropImage(imClean, imReference)
+    src, tar = CropImage(im, imReference, tol)
+    cle, tar = CropImage(imClean, imReference, tol)
     
     mse_src = mean_squared_error(src, tar)
     psnr_src = peak_signal_noise_ratio(src, tar)

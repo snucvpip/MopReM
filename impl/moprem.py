@@ -122,7 +122,7 @@ class MopReM:
         return self
 
         
-    def eval(self):
+    def eval(self, tol=100):
         datadir = self.pre_datadir
         source = os.path.join(datadir, 'source.png')
         target = os.path.join(datadir, 'target.png')
@@ -147,13 +147,13 @@ class MopReM:
         for f in files:
             clean = os.path.join(datadir, f)
             imClean = cv2.imread(clean)
-            cle, tar = eval.CropImage(imClean, imReference)
+            cle, tar = eval.CropImage(imClean, imReference, tol)
             ssim = structural_similarity(cle, tar, multichannel=True)
             if best_ssim < ssim:
                 best_ssim = ssim
                 best_clean = clean
                 
-        eval.main(source, target, best_clean, resultdir)
+        eval.main(source, target, best_clean, resultdir, tol)
         end = time.time()
         print('  Eval time\t\t\t\t+{:.2f}s'.format(end-start))
         return self
