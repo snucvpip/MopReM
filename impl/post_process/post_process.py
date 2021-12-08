@@ -12,6 +12,7 @@ def main(info, datadir, resultdir):
     result_name = 'clean0.png'
     result_path = os.path.join(resultdir, result_name)
     cv2.imwrite(result_path, img_zero)
+    return
 
     for i in range(1, level):
         img_merge = np.empty(shape=(img_height, img_width, 3))

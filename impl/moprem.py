@@ -31,7 +31,7 @@ class MopReM:
         self.post_resultdir = os.path.join(self.resultdir, 'post')
 
         self.eval_datadir = self.post_resultdir
-        self.eval_resultdir = os.path.join(self.resultdir, 'eval')
+        self.eval_resultdir = self.resultdir
         
     def pre(self):
         datadir = self.pre_datadir
@@ -44,7 +44,6 @@ class MopReM:
 
         source = os.path.join(datadir, 'source.png')
         target = os.path.join(datadir, 'target.png')
-        print(resultdir)
         start = time.time()
         pre_process.main(source, target, resultdir)
         end = time.time()
@@ -52,6 +51,7 @@ class MopReM:
         return self
 
     def demoire(self):
+        '''
         def _epll(background, moire, pooling=False):
             files = next(os.walk(datadir))[2]
             files.sort()
@@ -81,18 +81,19 @@ class MopReM:
                     # moire seperation
                     epll.main(target, moire, False, resultdir)
                 end = time.time()
-            print('  Epll processing time\t\t\t+{:.2f}s'.format(end-start))
-
+            print('  Epll processing time\t\t\t+{:.2f}s'.format(end-start))'''
+          
         def _remove_background():
             files = next(os.walk(datadir))[2]
             files.sort()
 
             start = time.time()
             for f in files:
+                if f != '0-1.png': continue
                 target = os.path.join(datadir, f)
                 remove_background.main(target, resultdir)
             end = time.time()
-            print('  Remove background processing time\t+{:.2f}s'.format(end-start))
+            print('  Demoire processing time\t\t+{:.2f}s'.format(end-start))
 
         datadir = self.demoire_datadir
         resultdir = self.demoire_resultdir
@@ -100,8 +101,8 @@ class MopReM:
         if not os.path.exists(resultdir):
             os.makedirs(resultdir)
           
-        _epll(background='GSModel_8x8_200_2M_noDC_zeromean.mat', moire='GMM_8x8_200_1500.mat', pooling=False)
-#         _remove_background()
+#        _epll(background='GSModel_8x8_200_2M_noDC_zeromean.mat', moire='GMM_8x8_200_1500.mat', pooling=False)
+        _remove_background()
         return self
 
     def post(self):
@@ -151,7 +152,7 @@ class MopReM:
             if best_ssim < ssim:
                 best_ssim = ssim
                 best_clean = clean
-        print(best_clean)
+                
         eval.main(source, target, best_clean, resultdir)
         end = time.time()
         print('  Eval time\t\t\t\t+{:.2f}s'.format(end-start))
@@ -166,7 +167,7 @@ if __name__ == '__main__':
     print('2021 fall SNU computer vision project')
     print()
 
-    exclude = ['etc', '.ipynb_checkpoints', 'physics']
+    exclude = ['etc', '.ipynb_checkpoints']
     datadir = os.path.join(pardir, 'data')
     imgs = [dirname for dirname in next(os.walk(datadir))[1] if not (dirname in exclude)]
     imgs.sort()

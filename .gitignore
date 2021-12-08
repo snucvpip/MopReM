@@ -1,5 +1,7 @@
 .DS_Store
-result/*
+result/*/post
+result/*/pre
+result/*/demoire
 .ipynb_checkpoints/*
 sota/epll/NIPSGMM/data
 
