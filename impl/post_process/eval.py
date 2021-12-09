@@ -136,7 +136,7 @@ def CropImage(im, imReference, tolerance=100):
     ax[1].imshow(imReference)
     ax[1].scatter(vimReference[:,0], vimReference[:,1], marker='x', c='red', s=200, linewidth=3)
     plt.tight_layout()
-    plt.savefig('images_to_crop.png', dpi=300)    
+    plt.savefig('images_to_crop.png', dpi=300, bbox_inches="tight")    
     plt.close()
 
     H, _ = cv2.findHomography(vim, vimReference)
@@ -178,20 +178,21 @@ def main(source, target, clean, resultdir, tol=100):
     tar = cv2.cvtColor(tar, cv2.COLOR_BGR2RGB)
     
     plt.close()
-    fig, ax = plt.subplots(ncols=3, figsize=(15, 10))
-    print(f'    Source\tMSE: {mse_src:.2f}\tPSNR: {psnr_src:.2f}\tSSIM: {ssim_src:.2f}')
-    ax[0].imshow(src), ax[0].set_title('Source')
-    ax[1].imshow(tar), ax[1].set_title('Target')
-    ax[2].imshow(diff_src, cmap='gray', vmin=0, vmax=255), ax[2].set_title('Difference')
-    plt.tight_layout()
-    plt.savefig(os.path.join(resultdir, 'source_result.pdf'), bbox_inches="tight")
     
-    plt.close()
-    fig, ax = plt.subplots(ncols=3, figsize=(15, 10))
-    print(f'    Clear\tMSE: {mse_cle:.2f}\tPSNR: {psnr_cle:.2f}\tSSIM: {ssim_cle:.2f}')
-    ax[0].imshow(cle), ax[0].set_title('Clean')
-    ax[1].imshow(tar), ax[1].set_title('Target')
-    ax[2].imshow(diff_cle, cmap='gray', vmin=0, vmax=255), ax[2].set_title('Difference')
+    fig, ax = plt.subplots(ncols=4, figsize=(15, 10))
+    ax[0].imshow(src)
+    ax[1].imshow(cle)
+    ax[2].imshow(tar)
+    ax[3].imshow(diff_cle, cmap='gray', vmin=0, vmax=255)
+    
+    ax[0].set_title('Source')
+    ax[1].set_title('Clean')
+    ax[2].set_title('Target')
+    ax[3].set_title('Difference')
+    
     plt.tight_layout()
-    plt.savefig(os.path.join(resultdir, 'clean_result.pdf'), bbox_inches="tight")
+    plt.savefig(os.path.join(resultdir, 'result.pdf'), bbox_inches="tight")
+    
+    print(f'    Source\tMSE: {mse_src:.2f}\tPSNR: {psnr_src:.2f}\tSSIM: {ssim_src:.2f}')
+    print(f'    Clean\tMSE: {mse_cle:.2f}\tPSNR: {psnr_cle:.2f}\tSSIM: {ssim_cle:.2f}')
 
