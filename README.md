@@ -1,17 +1,15 @@
 # MopReM
 Moiré Pattern Removal for Mobile, Texts/Diagrams on Single-colored Background
 
-![moprem](./resource/moprem.jpg)
-![exp1](./resource/exp1.jpg)
-![exp2](./resource/exp2.jpg)
 ### Data
-* Screen captured image
-* Mobile re-captured image
+* Screen captured image `target.png`
+* Mobile re-captured image `source.png`
+
+<img src="./resource/moprem.jpg" alt="moprem" width="70%"/>
 
 ### State of the art methods
-* Decomposition
 * MopNet
+* WDNet
+* SilentMoire
 
-### Implementation
-* Pre-processing
-* Post-evaluation
+![exp1](./resource/exp1.jpg)
